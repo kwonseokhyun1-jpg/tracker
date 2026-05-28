@@ -16,17 +16,10 @@ export interface Game {
   winnerDeckIds: string[]
 }
 
-export interface Pod {
-  id: string
-  name: string
-  deckIds: string[]
-}
-
 export interface AppData {
   players: Player[]
   decks: Deck[]
   games: Game[]
-  pods: Pod[]
 }
 
 export interface DeckStat {

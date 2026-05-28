@@ -4,6 +4,7 @@ import { TabBar } from './components/TabBar'
 import { DecksTab } from './components/DecksTab'
 import { LogTab } from './components/LogTab'
 import { StatsTab } from './components/StatsTab'
+import { BackupButton } from './components/BackupButton'
 import type { TabId } from './types'
 import './styles/app.css'
 
@@ -13,7 +14,10 @@ function AppContent() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>MTG Game Tracker</h1>
+        <div className="app-header-top">
+          <h1>MTG Game Tracker</h1>
+          <BackupButton />
+        </div>
         <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
       </header>
 

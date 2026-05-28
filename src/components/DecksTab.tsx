@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../context/DataContext'
 import { ConfirmDialog } from './ConfirmDialog'
-import { PodManager } from './PodManager'
 
 export function DecksTab() {
   const { data, addPlayer, updatePlayer, deletePlayer, addDeck, updateDeck, deleteDeck } =
@@ -263,8 +262,6 @@ export function DecksTab() {
           })}
         </ul>
       )}
-
-      <PodManager />
 
       <ConfirmDialog
         open={confirm !== null}

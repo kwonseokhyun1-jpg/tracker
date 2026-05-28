@@ -1,0 +1,127 @@
+import { useMemo, useState } from 'react'
+import type { Game } from '../types'
+
+interface GameHistoryProps {
+  games: Game[]
+  getDeckLabel: (deckId: string) => string
+  onEdit: (game: Game) => void
+  onDelete: (gameId: string) => void
+}
+
+export function GameHistory({ games, getDeckLabel, onEdit, onDelete }: GameHistoryProps) {
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [expanded, setExpanded] = useState(false)
+
+  const sortedGames = useMemo(
+    () => [...games].sort((a, b) => b.playedAt.localeCompare(a.playedAt)),
+    [games],
+  )
+
+  const filteredGames = useMemo(() => {
+    return sortedGames.filter((game) => {
+      if (dateFrom && game.playedAt < dateFrom) return false
+      if (dateTo && game.playedAt > dateTo) return false
+      return true
+    })
+  }, [sortedGames, dateFrom, dateTo])
+
+  const visibleGames = expanded ? filteredGames : filteredGames.slice(0, 5)
+
+  if (games.length === 0) return null
+
+  return (
+    <section className="game-history">
+      <div className="game-history-header">
+        <h3>Game History</h3>
+        <span className="muted game-count">
+          {filteredGames.length} game{filteredGames.length === 1 ? '' : 's'}
+        </span>
+      </div>
+
+      <div className="history-filters">
+        <label className="history-filter">
+          <span>From</span>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            aria-label="Filter from date"
+          />
+        </label>
+        <label className="history-filter">
+          <span>To</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            aria-label="Filter to date"
+          />
+        </label>
+        {(dateFrom || dateTo) && (
+          <button
+            type="button"
+            className="btn btn-sm btn-secondary"
+            onClick={() => {
+              setDateFrom('')
+              setDateTo('')
+            }}
+          >
+            Clear dates
+          </button>
+        )}
+      </div>
+
+      {filteredGames.length === 0 ? (
+        <p className="muted history-empty">No games match those dates.</p>
+      ) : (
+        <>
+          <ul className="game-list">
+            {visibleGames.map((game) => (
+              <li key={game.id} className="game-row">
+                <div className="game-info">
+                  <span className="game-date">{game.playedAt}</span>
+                  <span className="game-decks">
+                    {game.deckIds.map((id) => getDeckLabel(id)).join(', ')}
+                  </span>
+                  <span className="game-winner">
+                    {game.winnerDeckIds.length === 1 ? 'Winner' : 'Winners'}:{' '}
+                    {game.winnerDeckIds.map((id) => getDeckLabel(id)).join(', ')}
+                  </span>
+                </div>
+                <div className="row-actions">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => onEdit(game)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-danger"
+                    onClick={() => onDelete(game.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {filteredGames.length > 5 && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm history-toggle"
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded
+                ? 'Show less'
+                : `View full history (${filteredGames.length} games)`}
+            </button>
+          )}
+        </>
+      )}
+    </section>
+  )
+}

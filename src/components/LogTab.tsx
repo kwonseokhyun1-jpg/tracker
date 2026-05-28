@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useData } from '../context/DataContext'
 import { ConfirmDialog } from './ConfirmDialog'
+import { GameHistory } from './GameHistory'
+import type { Game } from '../types'
 
 function todayString() {
   return new Date().toISOString().slice(0, 10)
@@ -57,14 +59,40 @@ function slotToParticipant(slot: ParticipantSlot) {
   return { type: 'existing' as const, deckId: slot.selectValue }
 }
 
+function slotsFromGame(game: Game): { slots: ParticipantSlot[]; winnerSlotIds: Set<string> } {
+  const slots = game.deckIds.map((deckId) => createSlotFromDeck(deckId))
+  const winnerSlotIds = new Set(
+    slots
+      .filter((slot) => game.winnerDeckIds.includes(slot.selectValue))
+      .map((slot) => slot.id),
+  )
+  return { slots, winnerSlotIds }
+}
+
+function resetLogForm() {
+  return {
+    slots: [createSlot(), createSlot()] as ParticipantSlot[],
+    winnerSlotIds: new Set<string>(),
+    playedAt: todayString(),
+    editingGameId: null as string | null,
+  }
+}
+
 export function LogTab() {
-  const { data, addGameFromLog, deleteGame, getDeckLabel } = useData()
+  const { data, addGameFromLog, updateGameFromLog, deleteGame, getDeckLabel } = useData()
+  const formRef = useRef<HTMLFormElement>(null)
   const [playedAt, setPlayedAt] = useState(todayString)
   const [slots, setSlots] = useState<ParticipantSlot[]>(() => [createSlot(), createSlot()])
   const [winnerSlotIds, setWinnerSlotIds] = useState<Set<string>>(() => new Set())
   const [error, setError] = useState<string | null>(null)
   const [deleteGameId, setDeleteGameId] = useState<string | null>(null)
-  const [loadedPodId, setLoadedPodId] = useState<string | null>(null)
+  const [editingGameId, setEditingGameId] = useState<string | null>(null)
+
+  const lastGame = useMemo(() => {
+    return [...data.games]
+      .filter((game) => game.id !== editingGameId)
+      .sort((a, b) => b.playedAt.localeCompare(a.playedAt))[0] ?? null
+  }, [data.games, editingGameId])
 
   const decksByPlayer = useMemo(() => {
     return [...data.players]
@@ -97,13 +125,45 @@ export function LogTab() {
     [slots],
   )
 
-  const recentGames = useMemo(
-    () =>
-      [...data.games]
-        .sort((a, b) => b.playedAt.localeCompare(a.playedAt))
-        .slice(0, 10),
-    [data.games],
-  )
+  const clearForm = () => {
+    const next = resetLogForm()
+    setSlots(next.slots)
+    setWinnerSlotIds(next.winnerSlotIds)
+    setPlayedAt(next.playedAt)
+    setEditingGameId(next.editingGameId)
+    setError(null)
+  }
+
+  const startEditGame = (game: Game) => {
+    const { slots: nextSlots, winnerSlotIds: nextWinners } = slotsFromGame(game)
+    setEditingGameId(game.id)
+    setPlayedAt(game.playedAt)
+    setSlots(nextSlots)
+    setWinnerSlotIds(nextWinners)
+    setError(null)
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    const participants = filledSlots.map(slotToParticipant)
+    const winnerIndices = filledSlots
+      .map((slot, index) => (winnerSlotIds.has(slot.id) ? index : -1))
+      .filter((index) => index >= 0)
+
+    const result = editingGameId
+      ? updateGameFromLog(editingGameId, playedAt, participants, winnerIndices)
+      : addGameFromLog(playedAt, participants, winnerIndices)
+
+    if (!result.ok) {
+      setError(result.reason)
+      return
+    }
+
+    clearForm()
+  }
 
   const toggleWinner = (slotId: string) => {
     setWinnerSlotIds((prev) => {
@@ -126,35 +186,26 @@ export function LogTab() {
 
   const updateSlot = (id: string, patch: Partial<ParticipantSlot>) => {
     setSlots((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)))
-    setLoadedPodId(null)
     setError(null)
   }
 
   const addSlot = () => {
     setSlots((prev) => [...prev, createSlot()])
-    setLoadedPodId(null)
   }
 
-  const loadPod = (podId: string) => {
-    const pod = data.pods.find((p) => p.id === podId)
-    if (!pod) return
+  const copyDecksFromLastGame = () => {
+    if (!lastGame) return
 
-    const validDeckIds = pod.deckIds.filter((id) => data.decks.some((d) => d.id === id))
+    const validDeckIds = lastGame.deckIds.filter((id) =>
+      data.decks.some((deck) => deck.id === id),
+    )
     if (validDeckIds.length < 2) {
-      setError('This pod needs at least 2 valid decks. Edit it on the Decks tab.')
+      setError('The last game does not have enough valid decks to copy.')
       return
     }
 
     setSlots(validDeckIds.map(createSlotFromDeck))
     setWinnerSlotIds(new Set())
-    setLoadedPodId(podId)
-    setError(null)
-  }
-
-  const clearPodLoad = () => {
-    setSlots([createSlot(), createSlot()])
-    setWinnerSlotIds(new Set())
-    setLoadedPodId(null)
     setError(null)
   }
 
@@ -164,29 +215,6 @@ export function LogTab() {
       return prev.filter((s) => s.id !== id)
     })
     clearWinnersForSlot(id)
-    setLoadedPodId(null)
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-
-    const participants = filledSlots.map(slotToParticipant)
-    const winnerIndices = filledSlots
-      .map((slot, index) => (winnerSlotIds.has(slot.id) ? index : -1))
-      .filter((index) => index >= 0)
-
-    const result = addGameFromLog(playedAt, participants, winnerIndices)
-
-    if (!result.ok) {
-      setError(result.reason)
-      return
-    }
-
-    setSlots([createSlot(), createSlot()])
-    setWinnerSlotIds(new Set())
-    setLoadedPodId(null)
-    setPlayedAt(todayString())
   }
 
   return (
@@ -198,7 +226,11 @@ export function LogTab() {
         </p>
       </header>
 
-      <form className="log-form" onSubmit={handleSubmit}>
+      {editingGameId && (
+        <p className="edit-banner">Editing a logged game. Changes update stats when saved.</p>
+      )}
+
+      <form ref={formRef} className="log-form" onSubmit={handleSubmit}>
         <label className="field">
           <span>Date</span>
           <input
@@ -209,30 +241,19 @@ export function LogTab() {
           />
         </label>
 
-        {data.pods.length > 0 && (
-          <fieldset className="pod-load-fieldset">
-            <legend>Load pod</legend>
-            <p className="muted pod-load-hint">
-              Pick a saved group to fill in participating decks. You can still change individual slots.
-            </p>
-            <div className="pod-load-actions">
-              {data.pods.map((pod) => (
-                <button
-                  key={pod.id}
-                  type="button"
-                  className={`btn btn-sm ${loadedPodId === pod.id ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={() => loadPod(pod.id)}
-                >
-                  {pod.name}
-                </button>
-              ))}
-              {loadedPodId && (
-                <button type="button" className="btn btn-sm btn-secondary" onClick={clearPodLoad}>
-                  Clear
-                </button>
-              )}
-            </div>
-          </fieldset>
+        {lastGame && !editingGameId && (
+          <div className="copy-last-game">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={copyDecksFromLastGame}
+            >
+              Copy decks from last game
+            </button>
+            <span className="muted copy-last-game-hint">
+              Fills participating decks from {lastGame.playedAt}. Pick winners again.
+            </span>
+          </div>
         )}
 
         <fieldset className="deck-select-fieldset">
@@ -334,46 +355,34 @@ export function LogTab() {
 
         {error && <p className="error-msg">{error}</p>}
 
-        <button type="submit" className="btn btn-primary">
-          Save Game
-        </button>
+        <div className="log-form-actions">
+          <button type="submit" className="btn btn-primary">
+            {editingGameId ? 'Update Game' : 'Save Game'}
+          </button>
+          {editingGameId && (
+            <button type="button" className="btn btn-secondary" onClick={clearForm}>
+              Cancel edit
+            </button>
+          )}
+        </div>
       </form>
 
-      {recentGames.length > 0 && (
-        <section className="recent-games">
-          <h3>Recent Games</h3>
-          <ul className="game-list">
-            {recentGames.map((game) => (
-              <li key={game.id} className="game-row">
-                <div className="game-info">
-                  <span className="game-date">{game.playedAt}</span>
-                  <span className="game-decks">
-                    {game.deckIds.map((id) => getDeckLabel(id)).join(', ')}
-                  </span>
-                  <span className="game-winner">
-                    {game.winnerDeckIds.length === 1 ? 'Winner' : 'Winners'}:{' '}
-                    {game.winnerDeckIds.map((id) => getDeckLabel(id)).join(', ')}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-danger"
-                  onClick={() => setDeleteGameId(game.id)}
-                >
-                  Delete
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <GameHistory
+        games={data.games}
+        getDeckLabel={getDeckLabel}
+        onEdit={startEditGame}
+        onDelete={setDeleteGameId}
+      />
 
       <ConfirmDialog
         open={deleteGameId !== null}
         title="Delete game?"
         message="Remove this game from the log? Stats will be updated."
         onConfirm={() => {
-          if (deleteGameId) deleteGame(deleteGameId)
+          if (deleteGameId) {
+            deleteGame(deleteGameId)
+            if (editingGameId === deleteGameId) clearForm()
+          }
           setDeleteGameId(null)
         }}
         onCancel={() => setDeleteGameId(null)}

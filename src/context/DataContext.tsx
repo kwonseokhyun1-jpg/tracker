@@ -8,10 +8,10 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { resolveParticipantDeckIds, type LogParticipant } from '../logParticipants'
+import { resolveParticipantDeckIds, validateGameLog, type LogParticipant } from '../logParticipants'
 import { computeDeckStats, computePlayerStats } from '../stats'
 import { loadData, saveData } from '../storage'
-import type { AppData, Deck, DeckStat, Game, Player, PlayerStat, Pod } from '../types'
+import type { AppData, Deck, DeckStat, Game, Player, PlayerStat } from '../types'
 import { deckHasGameHistory, playerHasGameHistory } from '../stats'
 
 interface DataContextValue {
@@ -29,15 +29,15 @@ interface DataContextValue {
     participants: LogParticipant[],
     winnerIndices: number[],
   ) => { ok: true } | { ok: false; reason: string }
+  updateGameFromLog: (
+    gameId: string,
+    playedAt: string,
+    participants: LogParticipant[],
+    winnerIndices: number[],
+  ) => { ok: true } | { ok: false; reason: string }
   deleteGame: (id: string) => void
   getDeckLabel: (deckId: string) => string
-  addPod: (name: string, deckIds: string[]) => { ok: true } | { ok: false; reason: string }
-  updatePod: (
-    id: string,
-    name: string,
-    deckIds: string[],
-  ) => { ok: true } | { ok: false; reason: string }
-  deletePod: (id: string) => void
+  importData: (data: AppData) => void
 }
 
 const DataContext = createContext<DataContextValue | null>(null)
@@ -133,32 +133,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addGameFromLog = useCallback(
     (playedAt: string, participants: LogParticipant[], winnerIndices: number[]) => {
-      const filled = participants.filter((p) => {
-        if (p.type === 'existing') return Boolean(p.deckId)
-        return Boolean(p.deckName.trim())
-      })
+      const validation = validateGameLog(participants, winnerIndices)
+      if (!validation.ok) return validation
 
-      if (filled.length < 2) {
-        return { ok: false as const, reason: 'Add at least 2 participating decks.' }
-      }
-
-      if (winnerIndices.length === 0) {
-        return { ok: false as const, reason: 'Select at least one winner.' }
-      }
-
-      const uniqueWinnerIndices = [...new Set(winnerIndices)]
-      if (uniqueWinnerIndices.some((i) => i < 0 || i >= filled.length)) {
-        return { ok: false as const, reason: 'Select winners from the participating decks.' }
-      }
-
-      const deckIdsInForm = filled.map((p) =>
-        p.type === 'existing'
-          ? p.deckId
-          : `${(p.playerName.trim() || 'Random').toLowerCase()}|${p.deckName.trim().toLowerCase()}`,
-      )
-      if (new Set(deckIdsInForm).size !== deckIdsInForm.length) {
-        return { ok: false as const, reason: 'Each deck can only be selected once.' }
-      }
+      const { filled, winnerIndices: uniqueWinnerIndices } = validation
 
       setData((prev) => {
         const { data: nextData, deckIds } = resolveParticipantDeckIds(prev, filled)
@@ -177,6 +155,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const updateGameFromLog = useCallback(
+    (gameId: string, playedAt: string, participants: LogParticipant[], winnerIndices: number[]) => {
+      const validation = validateGameLog(participants, winnerIndices)
+      if (!validation.ok) return validation
+
+      const { filled, winnerIndices: uniqueWinnerIndices } = validation
+
+      setData((prev) => {
+        const { data: nextData, deckIds } = resolveParticipantDeckIds(prev, filled)
+        const winnerDeckIds = uniqueWinnerIndices.map((i) => deckIds[i])
+        return {
+          ...nextData,
+          games: nextData.games.map((g) =>
+            g.id === gameId ? { ...g, playedAt, deckIds, winnerDeckIds } : g,
+          ),
+        }
+      })
+
+      return { ok: true as const }
+    },
+    [],
+  )
+
   const deleteGame = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
@@ -184,49 +185,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }))
   }, [])
 
-  const addPod = useCallback((name: string, deckIds: string[]) => {
-    const trimmed = name.trim()
-    if (!trimmed) {
-      return { ok: false as const, reason: 'Pod name is required.' }
-    }
-    if (deckIds.length < 2) {
-      return { ok: false as const, reason: 'A pod needs at least 2 decks.' }
-    }
-    if (new Set(deckIds).size !== deckIds.length) {
-      return { ok: false as const, reason: 'Each deck can only appear once in a pod.' }
-    }
-
-    const pod: Pod = { id: crypto.randomUUID(), name: trimmed, deckIds }
-    setData((prev) => ({ ...prev, pods: [...prev.pods, pod] }))
-    return { ok: true as const }
-  }, [])
-
-  const updatePod = useCallback((id: string, name: string, deckIds: string[]) => {
-    const trimmed = name.trim()
-    if (!trimmed) {
-      return { ok: false as const, reason: 'Pod name is required.' }
-    }
-    if (deckIds.length < 2) {
-      return { ok: false as const, reason: 'A pod needs at least 2 decks.' }
-    }
-    if (new Set(deckIds).size !== deckIds.length) {
-      return { ok: false as const, reason: 'Each deck can only appear once in a pod.' }
-    }
-
-    setData((prev) => ({
-      ...prev,
-      pods: prev.pods.map((p) =>
-        p.id === id ? { ...p, name: trimmed, deckIds } : p,
-      ),
-    }))
-    return { ok: true as const }
-  }, [])
-
-  const deletePod = useCallback((id: string) => {
-    setData((prev) => ({
-      ...prev,
-      pods: prev.pods.filter((p) => p.id !== id),
-    }))
+  const importData = useCallback((next: AppData) => {
+    setData(next)
+    saveData(next)
   }, [])
 
   const value: DataContextValue = {
@@ -240,11 +201,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     updateDeck,
     deleteDeck,
     addGameFromLog,
+    updateGameFromLog,
     deleteGame,
     getDeckLabel,
-    addPod,
-    updatePod,
-    deletePod,
+    importData,
   }
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

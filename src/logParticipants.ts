@@ -55,3 +55,45 @@ export function resolveParticipantDeckIds(
     deckIds,
   }
 }
+
+export type GameLogValidation =
+  | {
+      ok: true
+      filled: LogParticipant[]
+      winnerIndices: number[]
+    }
+  | { ok: false; reason: string }
+
+export function validateGameLog(
+  participants: LogParticipant[],
+  winnerIndices: number[],
+): GameLogValidation {
+  const filled = participants.filter((p) => {
+    if (p.type === 'existing') return Boolean(p.deckId)
+    return Boolean(p.deckName.trim())
+  })
+
+  if (filled.length < 2) {
+    return { ok: false, reason: 'Add at least 2 participating decks.' }
+  }
+
+  if (winnerIndices.length === 0) {
+    return { ok: false, reason: 'Select at least one winner.' }
+  }
+
+  const uniqueWinnerIndices = [...new Set(winnerIndices)]
+  if (uniqueWinnerIndices.some((i) => i < 0 || i >= filled.length)) {
+    return { ok: false, reason: 'Select winners from the participating decks.' }
+  }
+
+  const deckIdsInForm = filled.map((p) =>
+    p.type === 'existing'
+      ? p.deckId
+      : `${(p.playerName.trim() || 'Random').toLowerCase()}|${p.deckName.trim().toLowerCase()}`,
+  )
+  if (new Set(deckIdsInForm).size !== deckIdsInForm.length) {
+    return { ok: false, reason: 'Each deck can only be selected once.' }
+  }
+
+  return { ok: true, filled, winnerIndices: uniqueWinnerIndices }
+}
