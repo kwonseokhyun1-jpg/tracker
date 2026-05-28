@@ -15,7 +15,10 @@ function AppContent() {
     <div className="app">
       <header className="app-header">
         <div className="app-header-top">
-          <h1>MTG Game Tracker</h1>
+          <div className="app-title-block">
+            <h1>MTG Game Tracker</h1>
+            <p className="app-build-id">Build {__BUILD_ID__} UTC</p>
+          </div>
           <BackupButton />
         </div>
         <TabBar activeTab={activeTab} onTabChange={setActiveTab} />

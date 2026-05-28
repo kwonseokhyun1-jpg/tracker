@@ -241,17 +241,20 @@ export function LogTab() {
           />
         </label>
 
-        {lastGame && !editingGameId && (
+        {!editingGameId && (
           <div className="copy-last-game">
             <button
               type="button"
               className="btn btn-secondary btn-sm"
               onClick={copyDecksFromLastGame}
+              disabled={!lastGame}
             >
               Copy decks from last game
             </button>
             <span className="muted copy-last-game-hint">
-              Fills participating decks from {lastGame.playedAt}. Pick winners again.
+              {lastGame
+                ? `Fills participating decks from ${lastGame.playedAt}. Pick winners again.`
+                : 'Log your first game to unlock quick deck copy for the next one.'}
             </span>
           </div>
         )}

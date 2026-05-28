@@ -51,10 +51,16 @@ body {
   margin-bottom: 1rem;
 }
 
-.app-header-top h1 {
+.app-title-block h1 {
   margin: 0;
   font-size: 1.75rem;
   font-weight: 700;
+}
+
+.app-build-id {
+  margin: 0.125rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .backup-btn {
