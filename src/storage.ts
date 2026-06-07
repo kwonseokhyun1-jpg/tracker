@@ -1,3 +1,4 @@
+import { normalizeGamePilots } from './gamePilots'
 import type { AppData, Deck, Game, Player } from './types'
 
 const EMPTY_DATA: AppData = {
@@ -53,10 +54,14 @@ function parseGames(raw: unknown): Game[] | null {
       : game.winnerDeckId
         ? [game.winnerDeckId]
         : []
+    const playedByPlayerIds = Array.isArray(game.playedByPlayerIds)
+      ? game.playedByPlayerIds.filter(isNonEmptyString)
+      : []
     games.push({
       id: game.id,
       playedAt: game.playedAt,
       deckIds: game.deckIds,
+      playedByPlayerIds,
       winnerDeckIds,
     })
   }
@@ -78,9 +83,11 @@ export function parseAppData(raw: unknown): ParseResult {
   const games = parseGames(parsed.games)
   if (!games) return { ok: false, reason: 'Backup has invalid games data.' }
 
+  const normalizedGames = games.map((game) => normalizeGamePilots(game, decks))
+
   return {
     ok: true,
-    data: { players, decks, games },
+    data: { players, decks, games: normalizedGames },
   }
 }
 

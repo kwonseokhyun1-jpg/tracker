@@ -3,12 +3,12 @@ import type { Game } from '../types'
 
 interface GameHistoryProps {
   games: Game[]
-  getDeckLabel: (deckId: string) => string
+  getGameDeckLabel: (deckId: string, playedByPlayerId?: string) => string
   onEdit: (game: Game) => void
   onDelete: (gameId: string) => void
 }
 
-export function GameHistory({ games, getDeckLabel, onEdit, onDelete }: GameHistoryProps) {
+export function GameHistory({ games, getGameDeckLabel, onEdit, onDelete }: GameHistoryProps) {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [expanded, setExpanded] = useState(false)
@@ -82,11 +82,23 @@ export function GameHistory({ games, getDeckLabel, onEdit, onDelete }: GameHisto
                 <div className="game-info">
                   <span className="game-date">{game.playedAt}</span>
                   <span className="game-decks">
-                    {game.deckIds.map((id) => getDeckLabel(id)).join(', ')}
+                    {game.deckIds
+                      .map((id, index) =>
+                        getGameDeckLabel(id, game.playedByPlayerIds[index] || undefined),
+                      )
+                      .join(', ')}
                   </span>
                   <span className="game-winner">
                     {game.winnerDeckIds.length === 1 ? 'Winner' : 'Winners'}:{' '}
-                    {game.winnerDeckIds.map((id) => getDeckLabel(id)).join(', ')}
+                    {game.winnerDeckIds
+                      .map((id) => {
+                        const index = game.deckIds.indexOf(id)
+                        return getGameDeckLabel(
+                          id,
+                          index >= 0 ? game.playedByPlayerIds[index] || undefined : undefined,
+                        )
+                      })
+                      .join(', ')}
                   </span>
                 </div>
                 <div className="row-actions">
