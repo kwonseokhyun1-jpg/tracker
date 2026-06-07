@@ -1,20 +1,24 @@
 import type { AppData, Deck } from './types'
 
 export type LogParticipant =
-  | { type: 'existing'; deckId: string }
-  | { type: 'new'; playerName: string; deckName: string }
+  | { type: 'existing'; deckId: string; playedByPlayerId?: string }
+  | { type: 'new'; playerName: string; deckName: string; playedByPlayerId?: string }
 
 export function resolveParticipantDeckIds(
   prev: AppData,
   participants: LogParticipant[],
-): { data: AppData; deckIds: string[] } {
+): { data: AppData; deckIds: string[]; playedByPlayerIds: string[] } {
   let players = prev.players
   let decks = prev.decks
   const deckIds: string[] = []
+  const playedByPlayerIds: string[] = []
 
   for (const participant of participants) {
     if (participant.type === 'existing') {
+      const deck = decks.find((d) => d.id === participant.deckId)
+      if (!deck) continue
       deckIds.push(participant.deckId)
+      playedByPlayerIds.push(participant.playedByPlayerId ?? deck.playerId)
       continue
     }
 
@@ -38,6 +42,7 @@ export function resolveParticipantDeckIds(
 
     if (existingDeck) {
       deckIds.push(existingDeck.id)
+      playedByPlayerIds.push(participant.playedByPlayerId ?? existingDeck.playerId)
       continue
     }
 
@@ -48,11 +53,13 @@ export function resolveParticipantDeckIds(
     }
     decks = [...decks, deck]
     deckIds.push(deck.id)
+    playedByPlayerIds.push(participant.playedByPlayerId ?? player.id)
   }
 
   return {
     data: { ...prev, players, decks },
     deckIds,
+    playedByPlayerIds,
   }
 }
 

@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { gameDeckLabel } from '../gamePilots'
 import { resolveParticipantDeckIds, validateGameLog, type LogParticipant } from '../logParticipants'
 import { computeDeckStats, computePlayerStats } from '../stats'
 import { loadData, saveData } from '../storage'
@@ -37,6 +38,7 @@ interface DataContextValue {
   ) => { ok: true } | { ok: false; reason: string }
   deleteGame: (id: string) => void
   getDeckLabel: (deckId: string) => string
+  getGameDeckLabel: (deckId: string, playedByPlayerId?: string) => string
   importData: (data: AppData) => void
 }
 
@@ -58,13 +60,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const playerStats = useMemo(() => computePlayerStats(data), [data])
 
   const getDeckLabel = useCallback(
-    (deckId: string) => {
-      const deck = data.decks.find((d) => d.id === deckId)
-      if (!deck) return 'Unknown deck'
-      const player = data.players.find((p) => p.id === deck.playerId)
-      return `${player?.name ?? 'Unknown'} — ${deck.name}`
-    },
-    [data.decks, data.players],
+    (deckId: string) => gameDeckLabel(deckId, undefined, data),
+    [data],
+  )
+
+  const getGameDeckLabel = useCallback(
+    (deckId: string, playedByPlayerId?: string) => gameDeckLabel(deckId, playedByPlayerId, data),
+    [data],
   )
 
   const addPlayer = useCallback((name: string) => {
@@ -139,12 +141,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const { filled, winnerIndices: uniqueWinnerIndices } = validation
 
       setData((prev) => {
-        const { data: nextData, deckIds } = resolveParticipantDeckIds(prev, filled)
+        const { data: nextData, deckIds, playedByPlayerIds } = resolveParticipantDeckIds(
+          prev,
+          filled,
+        )
         const winnerDeckIds = uniqueWinnerIndices.map((i) => deckIds[i])
         const entry: Game = {
           id: crypto.randomUUID(),
           playedAt,
           deckIds,
+          playedByPlayerIds,
           winnerDeckIds,
         }
         return { ...nextData, games: [...nextData.games, entry] }
@@ -163,12 +169,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const { filled, winnerIndices: uniqueWinnerIndices } = validation
 
       setData((prev) => {
-        const { data: nextData, deckIds } = resolveParticipantDeckIds(prev, filled)
+        const { data: nextData, deckIds, playedByPlayerIds } = resolveParticipantDeckIds(
+          prev,
+          filled,
+        )
         const winnerDeckIds = uniqueWinnerIndices.map((i) => deckIds[i])
         return {
           ...nextData,
           games: nextData.games.map((g) =>
-            g.id === gameId ? { ...g, playedAt, deckIds, winnerDeckIds } : g,
+            g.id === gameId
+              ? { ...g, playedAt, deckIds, playedByPlayerIds, winnerDeckIds }
+              : g,
           ),
         }
       })
@@ -204,6 +215,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     updateGameFromLog,
     deleteGame,
     getDeckLabel,
+    getGameDeckLabel,
     importData,
   }
 

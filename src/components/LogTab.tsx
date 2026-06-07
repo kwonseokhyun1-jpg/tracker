@@ -13,14 +13,16 @@ const NEW_DECK_VALUE = '__new__'
 type ParticipantSlot = {
   id: string
   selectValue: string
+  playedByPlayerId: string
   newPlayerName: string
   newDeckName: string
 }
 
-function createSlotFromDeck(deckId: string): ParticipantSlot {
+function createSlotFromDeck(deckId: string, playedByPlayerId = ''): ParticipantSlot {
   return {
     id: crypto.randomUUID(),
     selectValue: deckId,
+    playedByPlayerId,
     newPlayerName: '',
     newDeckName: '',
   }
@@ -30,37 +32,75 @@ function createSlot(): ParticipantSlot {
   return {
     id: crypto.randomUUID(),
     selectValue: '',
+    playedByPlayerId: '',
     newPlayerName: '',
     newDeckName: '',
   }
 }
 
+function defaultPilotForSlot(
+  slot: ParticipantSlot,
+  decks: { id: string; playerId: string }[],
+  players: { id: string; name: string }[],
+): string {
+  if (slot.selectValue === NEW_DECK_VALUE) {
+    const name = slot.newPlayerName.trim() || 'Random'
+    return players.find((p) => p.name.toLowerCase() === name.toLowerCase())?.id ?? ''
+  }
+  return decks.find((d) => d.id === slot.selectValue)?.playerId ?? ''
+}
+
 function slotLabel(
   slot: ParticipantSlot,
-  getDeckLabel: (deckId: string) => string,
+  getGameDeckLabel: (deckId: string, playedByPlayerId?: string) => string,
+  decks: { id: string; playerId: string }[],
+  players: { id: string; name: string }[],
 ): string {
   if (slot.selectValue === NEW_DECK_VALUE) {
     const player = slot.newPlayerName.trim() || 'Random'
     const deck = slot.newDeckName.trim()
-    return deck ? `${player} — ${deck}` : 'New deck (incomplete)'
+    if (!deck) return 'New deck (incomplete)'
+    const owner = players.find((p) => p.name.toLowerCase() === player.toLowerCase())
+    const pilotId = slot.playedByPlayerId || owner?.id
+    if (pilotId && owner && pilotId !== owner.id) {
+      const pilot = players.find((p) => p.id === pilotId)
+      return `${player} — ${deck} (played by ${pilot?.name ?? 'Unknown'})`
+    }
+    return `${player} — ${deck}`
   }
-  if (slot.selectValue) return getDeckLabel(slot.selectValue)
+  if (slot.selectValue) {
+    const pilotId = slot.playedByPlayerId || defaultPilotForSlot(slot, decks, players)
+    return getGameDeckLabel(slot.selectValue, pilotId || undefined)
+  }
   return 'Unselected'
 }
 
-function slotToParticipant(slot: ParticipantSlot) {
+function slotToParticipant(
+  slot: ParticipantSlot,
+  decks: { id: string; playerId: string }[],
+  players: { id: string; name: string }[],
+) {
+  const defaultPilot = defaultPilotForSlot(slot, decks, players)
+  const playedByPlayerId =
+    slot.playedByPlayerId && slot.playedByPlayerId !== defaultPilot
+      ? slot.playedByPlayerId
+      : undefined
+
   if (slot.selectValue === NEW_DECK_VALUE) {
     return {
       type: 'new' as const,
       playerName: slot.newPlayerName,
       deckName: slot.newDeckName,
+      playedByPlayerId,
     }
   }
-  return { type: 'existing' as const, deckId: slot.selectValue }
+  return { type: 'existing' as const, deckId: slot.selectValue, playedByPlayerId }
 }
 
 function slotsFromGame(game: Game): { slots: ParticipantSlot[]; winnerSlotIds: Set<string> } {
-  const slots = game.deckIds.map((deckId) => createSlotFromDeck(deckId))
+  const slots = game.deckIds.map((deckId, index) =>
+    createSlotFromDeck(deckId, game.playedByPlayerIds[index] ?? ''),
+  )
   const winnerSlotIds = new Set(
     slots
       .filter((slot) => game.winnerDeckIds.includes(slot.selectValue))
@@ -79,7 +119,7 @@ function resetLogForm() {
 }
 
 export function LogTab() {
-  const { data, addGameFromLog, updateGameFromLog, deleteGame, getDeckLabel } = useData()
+  const { data, addGameFromLog, updateGameFromLog, deleteGame, getGameDeckLabel } = useData()
   const formRef = useRef<HTMLFormElement>(null)
   const [playedAt, setPlayedAt] = useState(todayString)
   const [slots, setSlots] = useState<ParticipantSlot[]>(() => [createSlot(), createSlot()])
@@ -148,7 +188,7 @@ export function LogTab() {
     e.preventDefault()
     setError(null)
 
-    const participants = filledSlots.map(slotToParticipant)
+    const participants = filledSlots.map((slot) => slotToParticipant(slot, data.decks, data.players))
     const winnerIndices = filledSlots
       .map((slot, index) => (winnerSlotIds.has(slot.id) ? index : -1))
       .filter((index) => index >= 0)
@@ -204,7 +244,11 @@ export function LogTab() {
       return
     }
 
-    setSlots(validDeckIds.map(createSlotFromDeck))
+    setSlots(
+      validDeckIds.map((deckId, index) =>
+        createSlotFromDeck(deckId, lastGame.playedByPlayerIds[index] ?? ''),
+      ),
+    )
     setWinnerSlotIds(new Set())
     setError(null)
   }
@@ -222,7 +266,7 @@ export function LogTab() {
       <header className="panel-header">
         <h2>Log Game</h2>
         <p className="panel-desc">
-          Select a deck for each player, or add a new one for randoms.
+          Select a deck for each seat and optionally who played it. Defaults to the deck owner.
         </p>
       </header>
 
@@ -263,16 +307,25 @@ export function LogTab() {
           <legend>Participating decks</legend>
 
           <ul className="participant-list">
-            {slots.map((slot, index) => (
+            {slots.map((slot, index) => {
+              const defaultPilot = defaultPilotForSlot(slot, data.decks, data.players)
+              const pilotValue = slot.playedByPlayerId || defaultPilot
+              const showPilotSelect =
+                Boolean(slot.selectValue) &&
+                (slot.selectValue !== NEW_DECK_VALUE || Boolean(slot.newDeckName.trim()))
+
+              return (
               <li key={slot.id} className="participant-row">
                 <label className="participant-label">
-                  <span>Player {index + 1}</span>
+                  <span>Seat {index + 1}</span>
                   <select
                     value={slot.selectValue}
                     onChange={(e) => {
                       const value = e.target.value
+                      const deck = data.decks.find((d) => d.id === value)
                       updateSlot(slot.id, {
                         selectValue: value,
+                        playedByPlayerId: deck?.playerId ?? '',
                         newPlayerName: value === NEW_DECK_VALUE ? slot.newPlayerName : '',
                         newDeckName: value === NEW_DECK_VALUE ? slot.newDeckName : '',
                       })
@@ -303,9 +356,21 @@ export function LogTab() {
                   <div className="new-deck-fields">
                     <input
                       type="text"
-                      placeholder="Player name (optional, defaults to Random)"
+                      placeholder="Owner name (optional, defaults to Random)"
                       value={slot.newPlayerName}
-                      onChange={(e) => updateSlot(slot.id, { newPlayerName: e.target.value })}
+                      onChange={(e) => {
+                        const name = e.target.value
+                        const owner = data.players.find(
+                          (p) => p.name.toLowerCase() === (name.trim() || 'Random').toLowerCase(),
+                        )
+                        updateSlot(slot.id, {
+                          newPlayerName: name,
+                          playedByPlayerId:
+                            !slot.playedByPlayerId || slot.playedByPlayerId === defaultPilot
+                              ? owner?.id ?? ''
+                              : slot.playedByPlayerId,
+                        })
+                      }}
                     />
                     <input
                       type="text"
@@ -315,6 +380,31 @@ export function LogTab() {
                       required
                     />
                   </div>
+                )}
+
+                {showPilotSelect && (
+                  <label className="participant-label">
+                    <span>Played by</span>
+                    <select
+                      value={pilotValue}
+                      onChange={(e) => {
+                        const nextPilot = e.target.value
+                        updateSlot(slot.id, {
+                          playedByPlayerId: nextPilot === defaultPilot ? '' : nextPilot,
+                        })
+                      }}
+                    >
+                      {data.players
+                        .slice()
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((player) => (
+                          <option key={player.id} value={player.id}>
+                            {player.name}
+                            {player.id === defaultPilot ? ' (owner)' : ''}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
                 )}
 
                 {slots.length > 2 && (
@@ -327,7 +417,7 @@ export function LogTab() {
                   </button>
                 )}
               </li>
-            ))}
+            )})}
           </ul>
 
           <button type="button" className="btn btn-secondary btn-sm add-participant-btn" onClick={addSlot}>
@@ -348,7 +438,7 @@ export function LogTab() {
                       checked={winnerSlotIds.has(slot.id)}
                       onChange={() => toggleWinner(slot.id)}
                     />
-                    {slotLabel(slot, getDeckLabel)}
+                    {slotLabel(slot, getGameDeckLabel, data.decks, data.players)}
                   </label>
                 </li>
               ))}
@@ -372,7 +462,7 @@ export function LogTab() {
 
       <GameHistory
         games={data.games}
-        getDeckLabel={getDeckLabel}
+        getGameDeckLabel={getGameDeckLabel}
         onEdit={startEditGame}
         onDelete={setDeleteGameId}
       />

@@ -13,6 +13,8 @@ export interface Game {
   id: string
   playedAt: string
   deckIds: string[]
+  /** Who piloted each deck; index-aligned with deckIds. Defaults to deck owner when omitted. */
+  playedByPlayerIds: string[]
   winnerDeckIds: string[]
 }
 

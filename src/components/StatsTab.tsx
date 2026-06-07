@@ -136,7 +136,7 @@ export function StatsTab() {
         <p className="panel-desc">
           {viewMode === 'deck'
             ? 'Win rates and games played per deck.'
-            : 'Overall stats across all of a player\u2019s decks.'}
+            : 'Overall stats by who played, including borrowed decks.'}
         </p>
       </header>
 
