@@ -1,15 +1,14 @@
-import { useState } from 'react'
 import { DataProvider } from './context/DataContext'
 import { TabBar } from './components/TabBar'
 import { DecksTab } from './components/DecksTab'
 import { LogTab } from './components/LogTab'
 import { StatsTab } from './components/StatsTab'
 import { BackupButton } from './components/BackupButton'
-import type { TabId } from './types'
+import { useActiveTab } from './useActiveTab'
 import './styles/app.css'
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<TabId>('decks')
+  const [activeTab, setActiveTab] = useActiveTab()
 
   return (
     <div className="app">
