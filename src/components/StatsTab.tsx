@@ -10,10 +10,10 @@ import type {
   StatsViewMode,
 } from '../types'
 
-const RANDOM_PLAYER_NAME = 'random'
+const OTHERS_PLAYER_NAME = 'others'
 
-function isRandomPlayer(name: string): boolean {
-  return name.trim().toLowerCase() === RANDOM_PLAYER_NAME
+function isOthersPlayer(name: string): boolean {
+  return name.trim().toLowerCase() === OTHERS_PLAYER_NAME
 }
 
 function passesMinGamesFilter(gamesPlayed: number, minGames: StatsMinGamesFilter): boolean {
@@ -84,7 +84,7 @@ export function StatsTab() {
   const { deckStats, playerStats } = useData()
   const [viewMode, setViewMode] = useState<StatsViewMode>('deck')
   const [search, setSearch] = useState('')
-  const [excludeRandoms, setExcludeRandoms] = useState(false)
+  const [excludeOthers, setExcludeOthers] = useState(false)
   const [minGames, setMinGames] = useState<StatsMinGamesFilter>(3)
   const [deckSortField, setDeckSortField] = useState<DeckSortField>('winRate')
   const [playerSortField, setPlayerSortField] = useState<PlayerSortField>('winRate')
@@ -120,8 +120,8 @@ export function StatsTab() {
       )
     }
 
-    if (excludeRandoms) {
-      rows = rows.filter((s) => !isRandomPlayer(s.playerName))
+    if (excludeOthers) {
+      rows = rows.filter((s) => !isOthersPlayer(s.playerName))
     }
 
     rows = rows.filter((s) => passesMinGamesFilter(s.gamesPlayed, minGames))
@@ -129,7 +129,7 @@ export function StatsTab() {
     return [...rows].sort((a, b) =>
       compareDeckStats(a, b, deckSortField, sortDirection),
     )
-  }, [deckStats, search, excludeRandoms, minGames, deckSortField, sortDirection])
+  }, [deckStats, search, excludeOthers, minGames, deckSortField, sortDirection])
 
   const filteredPlayerStats = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -139,8 +139,8 @@ export function StatsTab() {
       rows = rows.filter((s) => s.playerName.toLowerCase().includes(q))
     }
 
-    if (excludeRandoms) {
-      rows = rows.filter((s) => !isRandomPlayer(s.playerName))
+    if (excludeOthers) {
+      rows = rows.filter((s) => !isOthersPlayer(s.playerName))
     }
 
     rows = rows.filter((s) => passesMinGamesFilter(s.gamesPlayed, minGames))
@@ -148,11 +148,11 @@ export function StatsTab() {
     return [...rows].sort((a, b) =>
       comparePlayerStats(a, b, playerSortField, sortDirection),
     )
-  }, [playerStats, search, excludeRandoms, minGames, playerSortField, sortDirection])
+  }, [playerStats, search, excludeOthers, minGames, playerSortField, sortDirection])
 
   const isEmpty = viewMode === 'deck' ? deckStats.length === 0 : playerStats.length === 0
   const hasActiveFilters =
-    search.trim() !== '' || excludeRandoms || minGames !== 'all'
+    search.trim() !== '' || excludeOthers || minGames !== 'all'
   const isFilteredEmpty =
     viewMode === 'deck' ? filteredDeckStats.length === 0 : filteredPlayerStats.length === 0
 
@@ -207,14 +207,13 @@ export function StatsTab() {
         <label className="stats-filter checkbox-label">
           <input
             type="checkbox"
-            checked={excludeRandoms}
-            onChange={(e) => setExcludeRandoms(e.target.checked)}
+            checked={excludeOthers}
+            onChange={(e) => setExcludeOthers(e.target.checked)}
           />
-          <span>Exclude Random</span>
+          <span>Exclude Others</span>
         </label>
 
         <label className="stats-filter">
-          <span>Min games</span>
           <select
             value={minGames}
             onChange={(e) =>
@@ -238,7 +237,7 @@ export function StatsTab() {
             className="btn btn-sm btn-secondary"
             onClick={() => {
               setSearch('')
-              setExcludeRandoms(false)
+              setExcludeOthers(false)
               setMinGames(3)
             }}
           >
