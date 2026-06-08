@@ -6,8 +6,19 @@ import type {
   PlayerSortField,
   PlayerStat,
   SortDirection,
+  StatsMinGamesFilter,
   StatsViewMode,
 } from '../types'
+
+const RANDOM_PLAYER_NAME = 'random'
+
+function isRandomPlayer(name: string): boolean {
+  return name.trim().toLowerCase() === RANDOM_PLAYER_NAME
+}
+
+function passesMinGamesFilter(gamesPlayed: number, minGames: StatsMinGamesFilter): boolean {
+  return minGames === 'all' || gamesPlayed >= minGames
+}
 
 function SortHeader<T extends string>({
   label,
@@ -73,6 +84,8 @@ export function StatsTab() {
   const { deckStats, playerStats } = useData()
   const [viewMode, setViewMode] = useState<StatsViewMode>('deck')
   const [search, setSearch] = useState('')
+  const [excludeRandoms, setExcludeRandoms] = useState(false)
+  const [minGames, setMinGames] = useState<StatsMinGamesFilter>(3)
   const [deckSortField, setDeckSortField] = useState<DeckSortField>('winRate')
   const [playerSortField, setPlayerSortField] = useState<PlayerSortField>('winRate')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
@@ -107,10 +120,16 @@ export function StatsTab() {
       )
     }
 
+    if (excludeRandoms) {
+      rows = rows.filter((s) => !isRandomPlayer(s.playerName))
+    }
+
+    rows = rows.filter((s) => passesMinGamesFilter(s.gamesPlayed, minGames))
+
     return [...rows].sort((a, b) =>
       compareDeckStats(a, b, deckSortField, sortDirection),
     )
-  }, [deckStats, search, deckSortField, sortDirection])
+  }, [deckStats, search, excludeRandoms, minGames, deckSortField, sortDirection])
 
   const filteredPlayerStats = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -120,12 +139,20 @@ export function StatsTab() {
       rows = rows.filter((s) => s.playerName.toLowerCase().includes(q))
     }
 
+    if (excludeRandoms) {
+      rows = rows.filter((s) => !isRandomPlayer(s.playerName))
+    }
+
+    rows = rows.filter((s) => passesMinGamesFilter(s.gamesPlayed, minGames))
+
     return [...rows].sort((a, b) =>
       comparePlayerStats(a, b, playerSortField, sortDirection),
     )
-  }, [playerStats, search, playerSortField, sortDirection])
+  }, [playerStats, search, excludeRandoms, minGames, playerSortField, sortDirection])
 
   const isEmpty = viewMode === 'deck' ? deckStats.length === 0 : playerStats.length === 0
+  const hasActiveFilters =
+    search.trim() !== '' || excludeRandoms || minGames !== 'all'
   const isFilteredEmpty =
     viewMode === 'deck' ? filteredDeckStats.length === 0 : filteredPlayerStats.length === 0
 
@@ -176,13 +203,57 @@ export function StatsTab() {
         />
       </div>
 
+      <div className="stats-filters">
+        <label className="stats-filter checkbox-label">
+          <input
+            type="checkbox"
+            checked={excludeRandoms}
+            onChange={(e) => setExcludeRandoms(e.target.checked)}
+          />
+          <span>Exclude Random</span>
+        </label>
+
+        <label className="stats-filter">
+          <span>Min games</span>
+          <select
+            value={minGames}
+            onChange={(e) =>
+              setMinGames(
+                e.target.value === 'all' ? 'all' : (Number(e.target.value) as StatsMinGamesFilter),
+              )
+            }
+            aria-label="Minimum games played"
+          >
+            <option value="all">All decks</option>
+            <option value="3">3+ games</option>
+            <option value="5">5+ games</option>
+            <option value="10">10+ games</option>
+            <option value="20">20+ games</option>
+          </select>
+        </label>
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            className="btn btn-sm btn-secondary"
+            onClick={() => {
+              setSearch('')
+              setExcludeRandoms(false)
+              setMinGames(3)
+            }}
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
       {isEmpty ? (
         <div className="empty-state">
           <p>No decks yet. Add players and decks on the Decks tab.</p>
         </div>
       ) : isFilteredEmpty ? (
         <div className="empty-state">
-          <p>No results match your search.</p>
+          <p>No results match your filters.</p>
         </div>
       ) : viewMode === 'deck' ? (
         <div className="table-wrap">
