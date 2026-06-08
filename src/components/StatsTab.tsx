@@ -213,24 +213,21 @@ export function StatsTab() {
           <span>Exclude Random</span>
         </label>
 
-        <label className="stats-filter">
-          <span>Min games</span>
-          <select
-            value={minGames}
-            onChange={(e) =>
-              setMinGames(
-                e.target.value === 'all' ? 'all' : (Number(e.target.value) as StatsMinGamesFilter),
-              )
-            }
-            aria-label="Minimum games played"
-          >
-            <option value="all">All decks</option>
-            <option value="3">3+ games</option>
-            <option value="5">5+ games</option>
-            <option value="10">10+ games</option>
-            <option value="20">20+ games</option>
-          </select>
-        </label>
+        <select
+          value={minGames}
+          onChange={(e) =>
+            setMinGames(
+              e.target.value === 'all' ? 'all' : (Number(e.target.value) as StatsMinGamesFilter),
+            )
+          }
+          aria-label="Minimum games played"
+        >
+          <option value="all">All decks</option>
+          <option value="3">3+ games</option>
+          <option value="5">5+ games</option>
+          <option value="10">10+ games</option>
+          <option value="20">20+ games</option>
+        </select>
 
         {hasActiveFilters && (
           <button
