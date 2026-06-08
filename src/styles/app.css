@@ -610,7 +610,29 @@ legend {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.stats-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+.stats-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.stats-filter.checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  padding-bottom: 0.5rem;
 }
 
 .sort-control {
