@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useData } from '../context/DataContext'
+import { getLastLoggedGame } from '../gameOrder'
 import { ConfirmDialog } from './ConfirmDialog'
 import { GameHistory } from './GameHistory'
 import type { Game } from '../types'
@@ -128,11 +129,10 @@ export function LogTab() {
   const [deleteGameId, setDeleteGameId] = useState<string | null>(null)
   const [editingGameId, setEditingGameId] = useState<string | null>(null)
 
-  const lastGame = useMemo(() => {
-    return [...data.games]
-      .filter((game) => game.id !== editingGameId)
-      .sort((a, b) => b.playedAt.localeCompare(a.playedAt))[0] ?? null
-  }, [data.games, editingGameId])
+  const lastGame = useMemo(
+    () => getLastLoggedGame(data.games, editingGameId),
+    [data.games, editingGameId],
+  )
 
   const decksByPlayer = useMemo(() => {
     return [...data.players]

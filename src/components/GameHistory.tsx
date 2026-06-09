@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { sortGamesNewestFirst } from '../gameOrder'
 import type { Game } from '../types'
 
 interface GameHistoryProps {
@@ -14,7 +15,7 @@ export function GameHistory({ games, getGameDeckLabel, onEdit, onDelete }: GameH
   const [expanded, setExpanded] = useState(false)
 
   const sortedGames = useMemo(
-    () => [...games].sort((a, b) => b.playedAt.localeCompare(a.playedAt)),
+    () => sortGamesNewestFirst(games),
     [games],
   )
 
