@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext'
 import { ConfirmDialog } from './ConfirmDialog'
 import { GameHistory } from './GameHistory'
 import type { Game } from '../types'
+import { OTHERS_PLAYER_NAME } from '../types'
 
 function todayString() {
   return new Date().toISOString().slice(0, 10)
@@ -44,7 +45,7 @@ function defaultPilotForSlot(
   players: { id: string; name: string }[],
 ): string {
   if (slot.selectValue === NEW_DECK_VALUE) {
-    const name = slot.newPlayerName.trim() || 'Random'
+    const name = slot.newPlayerName.trim() || OTHERS_PLAYER_NAME
     return players.find((p) => p.name.toLowerCase() === name.toLowerCase())?.id ?? ''
   }
   return decks.find((d) => d.id === slot.selectValue)?.playerId ?? ''
@@ -57,7 +58,7 @@ function slotLabel(
   players: { id: string; name: string }[],
 ): string {
   if (slot.selectValue === NEW_DECK_VALUE) {
-    const player = slot.newPlayerName.trim() || 'Random'
+    const player = slot.newPlayerName.trim() || OTHERS_PLAYER_NAME
     const deck = slot.newDeckName.trim()
     if (!deck) return 'New deck (incomplete)'
     const owner = players.find((p) => p.name.toLowerCase() === player.toLowerCase())
@@ -356,12 +357,12 @@ export function LogTab() {
                   <div className="new-deck-fields">
                     <input
                       type="text"
-                      placeholder="Owner name (optional, defaults to Random)"
+                      placeholder={`Owner name (optional, defaults to ${OTHERS_PLAYER_NAME})`}
                       value={slot.newPlayerName}
                       onChange={(e) => {
                         const name = e.target.value
                         const owner = data.players.find(
-                          (p) => p.name.toLowerCase() === (name.trim() || 'Random').toLowerCase(),
+                          (p) => p.name.toLowerCase() === (name.trim() || OTHERS_PLAYER_NAME).toLowerCase(),
                         )
                         updateSlot(slot.id, {
                           newPlayerName: name,

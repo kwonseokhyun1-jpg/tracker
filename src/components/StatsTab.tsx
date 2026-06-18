@@ -9,8 +9,7 @@ import type {
   StatsMinGamesFilter,
   StatsViewMode,
 } from '../types'
-
-const OTHERS_PLAYER_NAME = 'others'
+import { OTHERS_PLAYER_NAME } from '../types'
 
 function isOthersPlayer(name: string): boolean {
   return name.trim().toLowerCase() === OTHERS_PLAYER_NAME

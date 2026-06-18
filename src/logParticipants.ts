@@ -1,4 +1,5 @@
 import type { AppData, Deck } from './types'
+import { OTHERS_PLAYER_NAME } from './types'
 
 export type LogParticipant =
   | { type: 'existing'; deckId: string; playedByPlayerId?: string }
@@ -23,7 +24,7 @@ export function resolveParticipantDeckIds(
     }
 
     const deckTrimmed = participant.deckName.trim()
-    const playerTrimmed = participant.playerName.trim() || 'Random'
+    const playerTrimmed = participant.playerName.trim() || OTHERS_PLAYER_NAME
     if (!deckTrimmed) continue
 
     let player =
@@ -96,7 +97,7 @@ export function validateGameLog(
   const deckIdsInForm = filled.map((p) =>
     p.type === 'existing'
       ? p.deckId
-      : `${(p.playerName.trim() || 'Random').toLowerCase()}|${p.deckName.trim().toLowerCase()}`,
+      : `${(p.playerName.trim() || OTHERS_PLAYER_NAME).toLowerCase()}|${p.deckName.trim().toLowerCase()}`,
   )
   if (new Set(deckIdsInForm).size !== deckIdsInForm.length) {
     return { ok: false, reason: 'Each deck can only be selected once.' }
