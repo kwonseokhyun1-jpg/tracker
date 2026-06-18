@@ -42,6 +42,9 @@ export interface PlayerStat {
   winRate: number
 }
 
+/** Default owner when logging a new deck without specifying a player name. */
+export const OTHERS_PLAYER_NAME = 'Others'
+
 export type TabId = 'decks' | 'log' | 'stats'
 
 export type StatsViewMode = 'deck' | 'player'
