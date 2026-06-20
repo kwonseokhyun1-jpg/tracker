@@ -12,7 +12,7 @@ import type {
 import { OTHERS_PLAYER_NAME } from '../types'
 
 function isOthersPlayer(name: string): boolean {
-  return name.trim().toLowerCase() === OTHERS_PLAYER_NAME
+  return name.trim().toLowerCase() === OTHERS_PLAYER_NAME.toLowerCase()
 }
 
 function passesMinGamesFilter(gamesPlayed: number, minGames: StatsMinGamesFilter): boolean {
