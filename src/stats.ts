@@ -1,8 +1,21 @@
 import { getPlayedByPlayerId } from './gamePilots'
-import type { AppData, DeckStat, PlayerStat } from './types'
+import type { AppData, DeckStat, Game, PlayerStat } from './types'
 
-export function computeDeckStats(data: AppData): DeckStat[] {
-  const { decks, games, players } = data
+export interface ComputeStatsOptions {
+  exclude1v1?: boolean
+}
+
+export function is1v1Game(game: Game): boolean {
+  return game.deckIds.length === 2
+}
+
+function gamesForStats(games: Game[], options?: ComputeStatsOptions): Game[] {
+  return options?.exclude1v1 ? games.filter((g) => !is1v1Game(g)) : games
+}
+
+export function computeDeckStats(data: AppData, options?: ComputeStatsOptions): DeckStat[] {
+  const { decks, players } = data
+  const games = gamesForStats(data.games, options)
 
   return decks.map((deck) => {
     const participated = games.filter((g) => g.deckIds.includes(deck.id))
@@ -42,8 +55,9 @@ function playerWonGame(
   })
 }
 
-export function computePlayerStats(data: AppData): PlayerStat[] {
-  const { players, decks, games } = data
+export function computePlayerStats(data: AppData, options?: ComputeStatsOptions): PlayerStat[] {
+  const { players, decks } = data
+  const games = gamesForStats(data.games, options)
 
   return players
     .map((player) => {
