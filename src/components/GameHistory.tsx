@@ -8,9 +8,22 @@ interface GameHistoryProps {
   onDelete: (gameId: string) => void
 }
 
+function gameMatchesSearch(
+  game: Game,
+  query: string,
+  getGameDeckLabel: GameHistoryProps['getGameDeckLabel'],
+): boolean {
+  if (!query) return true
+  return game.deckIds.some((deckId, index) => {
+    const label = getGameDeckLabel(deckId, game.playedByPlayerIds[index] || undefined)
+    return label.toLowerCase().includes(query)
+  })
+}
+
 export function GameHistory({ games, getGameDeckLabel, onEdit, onDelete }: GameHistoryProps) {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState(false)
 
   const sortedGames = useMemo(
@@ -19,12 +32,16 @@ export function GameHistory({ games, getGameDeckLabel, onEdit, onDelete }: GameH
   )
 
   const filteredGames = useMemo(() => {
+    const q = search.trim().toLowerCase()
     return sortedGames.filter((game) => {
       if (dateFrom && game.playedAt < dateFrom) return false
       if (dateTo && game.playedAt > dateTo) return false
+      if (!gameMatchesSearch(game, q, getGameDeckLabel)) return false
       return true
     })
-  }, [sortedGames, dateFrom, dateTo])
+  }, [sortedGames, dateFrom, dateTo, search, getGameDeckLabel])
+
+  const hasActiveFilters = dateFrom !== '' || dateTo !== '' || search.trim() !== ''
 
   const visibleGames = expanded ? filteredGames : filteredGames.slice(0, 5)
 
@@ -40,6 +57,14 @@ export function GameHistory({ games, getGameDeckLabel, onEdit, onDelete }: GameH
       </div>
 
       <div className="history-filters">
+        <input
+          type="search"
+          placeholder="Search by player or deck..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search game history"
+          className="search-input"
+        />
         <label className="history-filter">
           <span>From</span>
           <input
@@ -58,22 +83,23 @@ export function GameHistory({ games, getGameDeckLabel, onEdit, onDelete }: GameH
             aria-label="Filter to date"
           />
         </label>
-        {(dateFrom || dateTo) && (
+        {hasActiveFilters && (
           <button
             type="button"
             className="btn btn-sm btn-secondary"
             onClick={() => {
               setDateFrom('')
               setDateTo('')
+              setSearch('')
             }}
           >
-            Clear dates
+            Clear filters
           </button>
         )}
       </div>
 
       {filteredGames.length === 0 ? (
-        <p className="muted history-empty">No games match those dates.</p>
+        <p className="muted history-empty">No games match your filters.</p>
       ) : (
         <>
           <ul className="game-list">
