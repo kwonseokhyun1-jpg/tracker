@@ -620,6 +620,13 @@ legend {
   gap: 0.75rem;
 }
 
+.stats-view-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .stats-filters {
   display: flex;
   flex-wrap: wrap;
@@ -785,10 +792,6 @@ legend {
 @media (max-width: 600px) {
   .stats-clear-filters {
     order: 1;
-  }
-
-  .stats-min-games-filter {
-    order: 2;
   }
 
   .app {
