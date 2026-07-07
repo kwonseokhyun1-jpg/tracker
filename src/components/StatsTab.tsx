@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useData } from '../context/DataContext'
 import { computeDeckStats, computePlayerStats } from '../stats'
 import type {
@@ -84,13 +84,28 @@ export function StatsTab() {
   const { data } = useData()
   const [viewMode, setViewMode] = useState<StatsViewMode>('deck')
   const [search, setSearch] = useState('')
-  const [excludeOthers, setExcludeOthers] = useState(false)
+  const [excludeOthers, setExcludeOthers] = useState(true)
   const [exclude1v1, setExclude1v1] = useState(false)
   const [excludeTeamGames, setExcludeTeamGames] = useState(false)
+  const [excludeMenuOpen, setExcludeMenuOpen] = useState(false)
+  const excludeMenuRef = useRef<HTMLDivElement>(null)
   const [minGames, setMinGames] = useState<StatsMinGamesFilter>(3)
   const [deckSortField, setDeckSortField] = useState<DeckSortField>('winRate')
   const [playerSortField, setPlayerSortField] = useState<PlayerSortField>('winRate')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+
+  useEffect(() => {
+    if (!excludeMenuOpen) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!excludeMenuRef.current?.contains(event.target as Node)) {
+        setExcludeMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [excludeMenuOpen])
 
   const handleDeckSort = (field: DeckSortField) => {
     if (deckSortField === field) {
@@ -171,11 +186,10 @@ export function StatsTab() {
   }, [playerStats, search, excludeOthers, minGames, playerSortField, sortDirection])
 
   const isEmpty = viewMode === 'deck' ? deckStats.length === 0 : playerStats.length === 0
+  const hasActiveExcludeOptions = !excludeOthers || exclude1v1 || excludeTeamGames
   const hasActiveFilters =
     search.trim() !== '' ||
-    excludeOthers ||
-    exclude1v1 ||
-    excludeTeamGames ||
+    hasActiveExcludeOptions ||
     minGames !== 'all'
   const isFilteredEmpty =
     viewMode === 'deck' ? filteredDeckStats.length === 0 : filteredPlayerStats.length === 0
@@ -228,33 +242,49 @@ export function StatsTab() {
       </div>
 
       <div className="stats-filters">
-        <div className="stats-exclude-options">
-          <label className="stats-filter checkbox-label">
-            <input
-              type="checkbox"
-              checked={excludeOthers}
-              onChange={(e) => setExcludeOthers(e.target.checked)}
-            />
-            <span>Exclude Others</span>
-          </label>
+        <div className="stats-exclude-menu" ref={excludeMenuRef}>
+          <button
+            type="button"
+            className={`btn btn-sm btn-secondary stats-exclude-menu-btn ${
+              excludeMenuOpen ? 'stats-exclude-menu-btn-open' : ''
+            } ${hasActiveExcludeOptions ? 'stats-exclude-menu-btn-active' : ''}`}
+            aria-expanded={excludeMenuOpen}
+            aria-haspopup="menu"
+            onClick={() => setExcludeMenuOpen((open) => !open)}
+          >
+            Exclude options
+          </button>
 
-          <label className="stats-filter checkbox-label">
-            <input
-              type="checkbox"
-              checked={exclude1v1}
-              onChange={(e) => setExclude1v1(e.target.checked)}
-            />
-            <span>Exclude 1v1s</span>
-          </label>
+          {excludeMenuOpen && (
+            <div className="stats-exclude-menu-panel" role="menu" aria-label="Exclude options">
+              <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
+                <input
+                  type="checkbox"
+                  checked={excludeOthers}
+                  onChange={(e) => setExcludeOthers(e.target.checked)}
+                />
+                <span>Exclude Others</span>
+              </label>
 
-          <label className="stats-filter checkbox-label">
-            <input
-              type="checkbox"
-              checked={excludeTeamGames}
-              onChange={(e) => setExcludeTeamGames(e.target.checked)}
-            />
-            <span>Exclude team games</span>
-          </label>
+              <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
+                <input
+                  type="checkbox"
+                  checked={exclude1v1}
+                  onChange={(e) => setExclude1v1(e.target.checked)}
+                />
+                <span>Exclude 1v1s</span>
+              </label>
+
+              <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
+                <input
+                  type="checkbox"
+                  checked={excludeTeamGames}
+                  onChange={(e) => setExcludeTeamGames(e.target.checked)}
+                />
+                <span>Exclude team games</span>
+              </label>
+            </div>
+          )}
         </div>
 
         <label className="stats-filter">
@@ -281,7 +311,8 @@ export function StatsTab() {
             className="btn btn-sm btn-secondary"
             onClick={() => {
               setSearch('')
-              setExcludeOthers(false)
+              setExcludeOthers(true)
+              setExcludeMenuOpen(false)
               setExclude1v1(false)
               setExcludeTeamGames(false)
               setMinGames(3)
