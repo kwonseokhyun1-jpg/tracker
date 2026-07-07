@@ -207,29 +207,49 @@ export function StatsTab() {
 
       <div className="stats-toolbar">
         <div className="stats-toolbar-row">
-          <div className="view-toggle" role="group" aria-label="Stats view">
-            <button
-              type="button"
-              className={`view-toggle-btn ${viewMode === 'deck' ? 'view-toggle-active' : ''}`}
-              onClick={() => {
-                setViewMode('deck')
-                setDeckSortField('winRate')
-                setSortDirection('desc')
-              }}
-            >
-              By Deck
-            </button>
-            <button
-              type="button"
-              className={`view-toggle-btn ${viewMode === 'player' ? 'view-toggle-active' : ''}`}
-              onClick={() => {
-                setViewMode('player')
-                setPlayerSortField('winRate')
-                setSortDirection('desc')
-              }}
-            >
-              By Player
-            </button>
+          <div className="stats-view-group">
+            <div className="view-toggle" role="group" aria-label="Stats view">
+              <button
+                type="button"
+                className={`view-toggle-btn ${viewMode === 'deck' ? 'view-toggle-active' : ''}`}
+                onClick={() => {
+                  setViewMode('deck')
+                  setDeckSortField('winRate')
+                  setSortDirection('desc')
+                }}
+              >
+                By Deck
+              </button>
+              <button
+                type="button"
+                className={`view-toggle-btn ${viewMode === 'player' ? 'view-toggle-active' : ''}`}
+                onClick={() => {
+                  setViewMode('player')
+                  setPlayerSortField('winRate')
+                  setSortDirection('desc')
+                }}
+              >
+                By Player
+              </button>
+            </div>
+
+            <label className="stats-filter stats-min-games-filter">
+              <select
+                value={minGames}
+                onChange={(e) =>
+                  setMinGames(
+                    e.target.value === 'all' ? 'all' : (Number(e.target.value) as StatsMinGamesFilter),
+                  )
+                }
+                aria-label="Minimum games played"
+              >
+                <option value="all">All decks</option>
+                <option value="3">3+ games</option>
+                <option value="5">5+ games</option>
+                <option value="10">10+ games</option>
+                <option value="20">20+ games</option>
+              </select>
+            </label>
           </div>
 
           <div className="stats-filters">
@@ -277,24 +297,6 @@ export function StatsTab() {
                 </div>
               )}
             </div>
-
-            <label className="stats-filter stats-min-games-filter">
-              <select
-                value={minGames}
-                onChange={(e) =>
-                  setMinGames(
-                    e.target.value === 'all' ? 'all' : (Number(e.target.value) as StatsMinGamesFilter),
-                  )
-                }
-                aria-label="Minimum games played"
-              >
-                <option value="all">All decks</option>
-                <option value="3">3+ games</option>
-                <option value="5">5+ games</option>
-                <option value="10">10+ games</option>
-                <option value="20">20+ games</option>
-              </select>
-            </label>
 
             {hasActiveFilters && (
               <button
