@@ -206,29 +206,113 @@ export function StatsTab() {
       </header>
 
       <div className="stats-toolbar">
-        <div className="view-toggle" role="group" aria-label="Stats view">
-          <button
-            type="button"
-            className={`view-toggle-btn ${viewMode === 'deck' ? 'view-toggle-active' : ''}`}
-            onClick={() => {
-              setViewMode('deck')
-              setDeckSortField('winRate')
-              setSortDirection('desc')
-            }}
-          >
-            By Deck
-          </button>
-          <button
-            type="button"
-            className={`view-toggle-btn ${viewMode === 'player' ? 'view-toggle-active' : ''}`}
-            onClick={() => {
-              setViewMode('player')
-              setPlayerSortField('winRate')
-              setSortDirection('desc')
-            }}
-          >
-            By Player
-          </button>
+        <div className="stats-toolbar-row">
+          <div className="view-toggle" role="group" aria-label="Stats view">
+            <button
+              type="button"
+              className={`view-toggle-btn ${viewMode === 'deck' ? 'view-toggle-active' : ''}`}
+              onClick={() => {
+                setViewMode('deck')
+                setDeckSortField('winRate')
+                setSortDirection('desc')
+              }}
+            >
+              By Deck
+            </button>
+            <button
+              type="button"
+              className={`view-toggle-btn ${viewMode === 'player' ? 'view-toggle-active' : ''}`}
+              onClick={() => {
+                setViewMode('player')
+                setPlayerSortField('winRate')
+                setSortDirection('desc')
+              }}
+            >
+              By Player
+            </button>
+          </div>
+
+          <div className="stats-filters">
+            <div className="stats-exclude-menu" ref={excludeMenuRef}>
+              <button
+                type="button"
+                className={`btn btn-sm btn-secondary stats-exclude-menu-btn ${
+                  excludeMenuOpen ? 'stats-exclude-menu-btn-open' : ''
+                } ${hasActiveExcludeOptions ? 'stats-exclude-menu-btn-active' : ''}`}
+                aria-expanded={excludeMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setExcludeMenuOpen((open) => !open)}
+              >
+                Exclude options
+              </button>
+
+              {excludeMenuOpen && (
+                <div className="stats-exclude-menu-panel" role="menu" aria-label="Exclude options">
+                  <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
+                    <input
+                      type="checkbox"
+                      checked={excludeOthers}
+                      onChange={(e) => setExcludeOthers(e.target.checked)}
+                    />
+                    <span>Exclude Others</span>
+                  </label>
+
+                  <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
+                    <input
+                      type="checkbox"
+                      checked={exclude1v1}
+                      onChange={(e) => setExclude1v1(e.target.checked)}
+                    />
+                    <span>Exclude 1v1s</span>
+                  </label>
+
+                  <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
+                    <input
+                      type="checkbox"
+                      checked={excludeTeamGames}
+                      onChange={(e) => setExcludeTeamGames(e.target.checked)}
+                    />
+                    <span>Exclude team games</span>
+                  </label>
+                </div>
+              )}
+            </div>
+
+            <label className="stats-filter">
+              <select
+                value={minGames}
+                onChange={(e) =>
+                  setMinGames(
+                    e.target.value === 'all' ? 'all' : (Number(e.target.value) as StatsMinGamesFilter),
+                  )
+                }
+                aria-label="Minimum games played"
+              >
+                <option value="all">All decks</option>
+                <option value="3">3+ games</option>
+                <option value="5">5+ games</option>
+                <option value="10">10+ games</option>
+                <option value="20">20+ games</option>
+              </select>
+            </label>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="btn btn-sm btn-secondary"
+                onClick={() => {
+                  setSearch('')
+                  setExcludeOthers(true)
+                  setExcludeMenuOpen(false)
+                  setExclude1v1(false)
+                  setExcludeTeamGames(false)
+                  setMinGames(3)
+                }}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
 
         <input
@@ -239,88 +323,6 @@ export function StatsTab() {
           aria-label="Search stats"
           className="search-input"
         />
-      </div>
-
-      <div className="stats-filters">
-        <div className="stats-exclude-menu" ref={excludeMenuRef}>
-          <button
-            type="button"
-            className={`btn btn-sm btn-secondary stats-exclude-menu-btn ${
-              excludeMenuOpen ? 'stats-exclude-menu-btn-open' : ''
-            } ${hasActiveExcludeOptions ? 'stats-exclude-menu-btn-active' : ''}`}
-            aria-expanded={excludeMenuOpen}
-            aria-haspopup="menu"
-            onClick={() => setExcludeMenuOpen((open) => !open)}
-          >
-            Exclude options
-          </button>
-
-          {excludeMenuOpen && (
-            <div className="stats-exclude-menu-panel" role="menu" aria-label="Exclude options">
-              <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
-                <input
-                  type="checkbox"
-                  checked={excludeOthers}
-                  onChange={(e) => setExcludeOthers(e.target.checked)}
-                />
-                <span>Exclude Others</span>
-              </label>
-
-              <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
-                <input
-                  type="checkbox"
-                  checked={exclude1v1}
-                  onChange={(e) => setExclude1v1(e.target.checked)}
-                />
-                <span>Exclude 1v1s</span>
-              </label>
-
-              <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
-                <input
-                  type="checkbox"
-                  checked={excludeTeamGames}
-                  onChange={(e) => setExcludeTeamGames(e.target.checked)}
-                />
-                <span>Exclude team games</span>
-              </label>
-            </div>
-          )}
-        </div>
-
-        <label className="stats-filter">
-          <select
-            value={minGames}
-            onChange={(e) =>
-              setMinGames(
-                e.target.value === 'all' ? 'all' : (Number(e.target.value) as StatsMinGamesFilter),
-              )
-            }
-            aria-label="Minimum games played"
-          >
-            <option value="all">All decks</option>
-            <option value="3">3+ games</option>
-            <option value="5">5+ games</option>
-            <option value="10">10+ games</option>
-            <option value="20">20+ games</option>
-          </select>
-        </label>
-
-        {hasActiveFilters && (
-          <button
-            type="button"
-            className="btn btn-sm btn-secondary"
-            onClick={() => {
-              setSearch('')
-              setExcludeOthers(true)
-              setExcludeMenuOpen(false)
-              setExclude1v1(false)
-              setExcludeTeamGames(false)
-              setMinGames(3)
-            }}
-          >
-            Clear filters
-          </button>
-        )}
       </div>
 
       {isEmpty ? (
