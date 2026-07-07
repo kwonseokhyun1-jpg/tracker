@@ -86,6 +86,7 @@ export function StatsTab() {
   const [search, setSearch] = useState('')
   const [excludeOthers, setExcludeOthers] = useState(false)
   const [exclude1v1, setExclude1v1] = useState(false)
+  const [excludeTeamGames, setExcludeTeamGames] = useState(false)
   const [minGames, setMinGames] = useState<StatsMinGamesFilter>(3)
   const [deckSortField, setDeckSortField] = useState<DeckSortField>('winRate')
   const [playerSortField, setPlayerSortField] = useState<PlayerSortField>('winRate')
@@ -109,10 +110,13 @@ export function StatsTab() {
     }
   }
 
-  const statsOptions = useMemo(
-    () => (exclude1v1 ? { exclude1v1: true as const } : undefined),
-    [exclude1v1],
-  )
+  const statsOptions = useMemo(() => {
+    if (!exclude1v1 && !excludeTeamGames) return undefined
+    return {
+      ...(exclude1v1 ? { exclude1v1: true as const } : {}),
+      ...(excludeTeamGames ? { excludeTeamGames: true as const } : {}),
+    }
+  }, [exclude1v1, excludeTeamGames])
 
   const deckStats = useMemo(
     () => computeDeckStats(data, statsOptions),
@@ -168,7 +172,11 @@ export function StatsTab() {
 
   const isEmpty = viewMode === 'deck' ? deckStats.length === 0 : playerStats.length === 0
   const hasActiveFilters =
-    search.trim() !== '' || excludeOthers || exclude1v1 || minGames !== 'all'
+    search.trim() !== '' ||
+    excludeOthers ||
+    exclude1v1 ||
+    excludeTeamGames ||
+    minGames !== 'all'
   const isFilteredEmpty =
     viewMode === 'deck' ? filteredDeckStats.length === 0 : filteredPlayerStats.length === 0
 
@@ -220,23 +228,34 @@ export function StatsTab() {
       </div>
 
       <div className="stats-filters">
-        <label className="stats-filter checkbox-label">
-          <input
-            type="checkbox"
-            checked={excludeOthers}
-            onChange={(e) => setExcludeOthers(e.target.checked)}
-          />
-          <span>Exclude Others</span>
-        </label>
+        <div className="stats-exclude-options">
+          <label className="stats-filter checkbox-label">
+            <input
+              type="checkbox"
+              checked={excludeOthers}
+              onChange={(e) => setExcludeOthers(e.target.checked)}
+            />
+            <span>Exclude Others</span>
+          </label>
 
-        <label className="stats-filter checkbox-label">
-          <input
-            type="checkbox"
-            checked={exclude1v1}
-            onChange={(e) => setExclude1v1(e.target.checked)}
-          />
-          <span>Exclude 1v1s</span>
-        </label>
+          <label className="stats-filter checkbox-label">
+            <input
+              type="checkbox"
+              checked={exclude1v1}
+              onChange={(e) => setExclude1v1(e.target.checked)}
+            />
+            <span>Exclude 1v1s</span>
+          </label>
+
+          <label className="stats-filter checkbox-label">
+            <input
+              type="checkbox"
+              checked={excludeTeamGames}
+              onChange={(e) => setExcludeTeamGames(e.target.checked)}
+            />
+            <span>Exclude team games</span>
+          </label>
+        </div>
 
         <label className="stats-filter">
           <select
@@ -264,6 +283,7 @@ export function StatsTab() {
               setSearch('')
               setExcludeOthers(false)
               setExclude1v1(false)
+              setExcludeTeamGames(false)
               setMinGames(3)
             }}
           >
