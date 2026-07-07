@@ -783,6 +783,14 @@ legend {
 }
 
 @media (max-width: 600px) {
+  .stats-clear-filters {
+    order: 1;
+  }
+
+  .stats-min-games-filter {
+    order: 2;
+  }
+
   .app {
     padding: 0.75rem;
   }
