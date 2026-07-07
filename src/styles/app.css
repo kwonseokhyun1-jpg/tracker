@@ -607,18 +607,24 @@ legend {
 
 .stats-toolbar {
   display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stats-toolbar-row {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
 }
 
 .stats-filters {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
 }
 
 .stats-exclude-menu {
