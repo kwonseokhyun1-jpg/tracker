@@ -278,7 +278,7 @@ export function StatsTab() {
               )}
             </div>
 
-            <label className="stats-filter">
+            <label className="stats-filter stats-min-games-filter">
               <select
                 value={minGames}
                 onChange={(e) =>
@@ -299,7 +299,7 @@ export function StatsTab() {
             {hasActiveFilters && (
               <button
                 type="button"
-                className="btn btn-sm btn-secondary"
+                className="btn btn-sm btn-secondary stats-clear-filters"
                 onClick={() => {
                   setSearch('')
                   setExcludeOthers(true)
