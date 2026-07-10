@@ -407,13 +407,6 @@ export function StatsTab() {
                   onSort={handlePlayerSort}
                 />
                 <SortHeader
-                  label="Decks"
-                  field="deckCount"
-                  sortField={playerSortField}
-                  sortDirection={sortDirection}
-                  onSort={handlePlayerSort}
-                />
-                <SortHeader
                   label="Games"
                   field="gamesPlayed"
                   sortField={playerSortField}
@@ -440,7 +433,6 @@ export function StatsTab() {
               {filteredPlayerStats.map((stat) => (
                 <tr key={stat.playerId}>
                   <td>{stat.playerName}</td>
-                  <td>{stat.deckCount}</td>
                   <td>{stat.gamesPlayed}</td>
                   <td>{stat.wins}</td>
                   <td>
