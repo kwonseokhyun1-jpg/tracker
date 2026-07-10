@@ -53,5 +53,5 @@ export type StatsViewMode = 'deck' | 'player'
 export type StatsMinGamesFilter = 'all' | 3 | 5 | 10 | 20
 
 export type DeckSortField = 'deckName' | 'playerName' | 'gamesPlayed' | 'wins' | 'winRate'
-export type PlayerSortField = 'playerName' | 'deckCount' | 'gamesPlayed' | 'wins' | 'winRate'
+export type PlayerSortField = 'playerName' | 'gamesPlayed' | 'wins' | 'winRate'
 export type SortDirection = 'asc' | 'desc'
