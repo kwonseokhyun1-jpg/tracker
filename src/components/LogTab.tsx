@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useData } from '../context/DataContext'
+import { getLastLoggedGame } from '../gameOrder'
 import { ConfirmDialog } from './ConfirmDialog'
 import { GameHistory } from './GameHistory'
 import type { Game } from '../types'
@@ -129,11 +130,10 @@ export function LogTab() {
   const [deleteGameId, setDeleteGameId] = useState<string | null>(null)
   const [editingGameId, setEditingGameId] = useState<string | null>(null)
 
-  const lastGame = useMemo(() => {
-    return [...data.games]
-      .filter((game) => game.id !== editingGameId)
-      .sort((a, b) => b.playedAt.localeCompare(a.playedAt))[0] ?? null
-  }, [data.games, editingGameId])
+  const lastGame = useMemo(
+    () => getLastLoggedGame(data.games, editingGameId),
+    [data.games, editingGameId],
+  )
 
   const decksByPlayer = useMemo(() => {
     return [...data.players]
@@ -298,7 +298,7 @@ export function LogTab() {
             </button>
             <span className="muted copy-last-game-hint">
               {lastGame
-                ? `Fills participating decks from ${lastGame.playedAt}. Pick winners again.`
+                ? `Uses decks from your last logged game (${lastGame.playedAt}). Pick winners again.`
                 : 'Log your first game to unlock quick deck copy for the next one.'}
             </span>
           </div>
