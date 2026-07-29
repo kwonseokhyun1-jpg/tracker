@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useData } from '../context/DataContext'
-import { computeDeckStats, computePlayerStats } from '../stats'
+import { computeDeckStats, computePlayerStats, is1v1Game, isTeamGame } from '../stats'
 import type {
   DeckSortField,
   DeckStat,
@@ -11,6 +11,7 @@ import type {
   StatsViewMode,
 } from '../types'
 import { OTHERS_PLAYER_NAME } from '../types'
+import { DeckGamesDialog } from './DeckGamesDialog'
 
 function isOthersPlayer(name: string): boolean {
   return name.trim().toLowerCase() === OTHERS_PLAYER_NAME.toLowerCase()
@@ -81,7 +82,7 @@ function comparePlayerStats(
 }
 
 export function StatsTab() {
-  const { data } = useData()
+  const { data, getGameDeckLabel } = useData()
   const [viewMode, setViewMode] = useState<StatsViewMode>('deck')
   const [search, setSearch] = useState('')
   const [excludeOthers, setExcludeOthers] = useState(true)
@@ -93,6 +94,7 @@ export function StatsTab() {
   const [deckSortField, setDeckSortField] = useState<DeckSortField>('winRate')
   const [playerSortField, setPlayerSortField] = useState<PlayerSortField>('winRate')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [selectedDeck, setSelectedDeck] = useState<DeckStat | null>(null)
 
   useEffect(() => {
     if (!excludeMenuOpen) return
@@ -193,6 +195,16 @@ export function StatsTab() {
     minGames !== 'all'
   const isFilteredEmpty =
     viewMode === 'deck' ? filteredDeckStats.length === 0 : filteredPlayerStats.length === 0
+
+  const selectedDeckGames = useMemo(() => {
+    if (!selectedDeck) return []
+    return data.games.filter((game) => {
+      if (!game.deckIds.includes(selectedDeck.deckId)) return false
+      if (exclude1v1 && is1v1Game(game)) return false
+      if (excludeTeamGames && isTeamGame(game)) return false
+      return true
+    })
+  }, [data.games, selectedDeck, exclude1v1, excludeTeamGames])
 
   return (
     <div className="tab-panel">
@@ -379,7 +391,20 @@ export function StatsTab() {
             </thead>
             <tbody>
               {filteredDeckStats.map((stat) => (
-                <tr key={stat.deckId}>
+                <tr
+                  key={stat.deckId}
+                  className="stats-row-clickable"
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View games for ${stat.deckName}`}
+                  onClick={() => setSelectedDeck(stat)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setSelectedDeck(stat)
+                    }
+                  }}
+                >
                   <td>{stat.deckName}</td>
                   <td>{stat.playerName}</td>
                   <td>{stat.gamesPlayed}</td>
@@ -446,6 +471,16 @@ export function StatsTab() {
           </table>
         </div>
       )}
+
+      <DeckGamesDialog
+        open={selectedDeck !== null}
+        deckName={selectedDeck?.deckName ?? ''}
+        playerName={selectedDeck?.playerName ?? ''}
+        deckId={selectedDeck?.deckId ?? ''}
+        games={selectedDeckGames}
+        getGameDeckLabel={getGameDeckLabel}
+        onClose={() => setSelectedDeck(null)}
+      />
     </div>
   )
 }
