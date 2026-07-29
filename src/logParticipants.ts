@@ -85,10 +85,6 @@ export function validateGameLog(
     return { ok: false, reason: 'Add at least 2 participating decks.' }
   }
 
-  if (winnerIndices.length === 0) {
-    return { ok: false, reason: 'Select at least one winner.' }
-  }
-
   const uniqueWinnerIndices = [...new Set(winnerIndices)]
   if (uniqueWinnerIndices.some((i) => i < 0 || i >= filled.length)) {
     return { ok: false, reason: 'Select winners from the participating decks.' }

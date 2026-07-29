@@ -429,7 +429,9 @@ export function LogTab() {
         {filledSlots.length > 0 && (
           <fieldset className="winner-fieldset">
             <legend>Winners</legend>
-            <p className="muted winner-hint">Select one or more winners (e.g. team games or draws).</p>
+            <p className="muted winner-hint">
+              Select one or more winners (e.g. team games or draws), or leave all unchecked if nobody won.
+            </p>
             <ul className="checkbox-list">
               {filledSlots.map((slot) => (
                 <li key={slot.id}>

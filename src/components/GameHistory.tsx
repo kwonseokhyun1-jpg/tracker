@@ -116,16 +116,17 @@ export function GameHistory({ games, getGameDeckLabel, onEdit, onDelete }: GameH
                       .join(', ')}
                   </span>
                   <span className="game-winner">
-                    {game.winnerDeckIds.length === 1 ? 'Winner' : 'Winners'}:{' '}
-                    {game.winnerDeckIds
-                      .map((id) => {
-                        const index = game.deckIds.indexOf(id)
-                        return getGameDeckLabel(
-                          id,
-                          index >= 0 ? game.playedByPlayerIds[index] || undefined : undefined,
-                        )
-                      })
-                      .join(', ')}
+                    {game.winnerDeckIds.length === 0
+                      ? 'Nobody wins'
+                      : `${game.winnerDeckIds.length === 1 ? 'Winner' : 'Winners'}: ${game.winnerDeckIds
+                          .map((id) => {
+                            const index = game.deckIds.indexOf(id)
+                            return getGameDeckLabel(
+                              id,
+                              index >= 0 ? game.playedByPlayerIds[index] || undefined : undefined,
+                            )
+                          })
+                          .join(', ')}`}
                   </span>
                 </div>
                 <div className="row-actions">
