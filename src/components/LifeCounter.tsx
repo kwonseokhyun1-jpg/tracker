@@ -350,7 +350,11 @@ function PlayerLifePanel({
       className="life-counter-zone life-counter-zone-minus"
       aria-label={`Decrease ${displayName} life`}
       {...zoneProps(-1)}
-    />
+    >
+      <span className="life-counter-zone-label" aria-hidden="true">
+        −
+      </span>
+    </button>
   )
 
   const plusZone = (
@@ -359,7 +363,11 @@ function PlayerLifePanel({
       className="life-counter-zone life-counter-zone-plus"
       aria-label={`Increase ${displayName} life`}
       {...zoneProps(1)}
-    />
+    >
+      <span className="life-counter-zone-label" aria-hidden="true">
+        +
+      </span>
+    </button>
   )
 
   return (
