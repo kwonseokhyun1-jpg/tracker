@@ -54,7 +54,7 @@ function syncCommanderDamage(
   return next
 }
 
-type PanelOrientation = 'up' | 'down' | 'neutral'
+type PanelOrientation = 'left' | 'right' | 'neutral'
 
 interface TableSeat {
   row: number
@@ -76,7 +76,7 @@ function getTableSeats(playerCount: number): TableSeat[] {
     return {
       row,
       col,
-      orientation: row === 1 ? ('up' as const) : ('down' as const),
+      orientation: col === 1 ? ('left' as const) : ('right' as const),
     }
   })
 }
