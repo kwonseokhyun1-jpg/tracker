@@ -87,7 +87,6 @@ function HexagonButton({ onClick, label }: { onClick: () => void; label: string 
       <svg viewBox="0 0 100 100" className="life-counter-hex-icon" aria-hidden="true">
         <polygon points="50,4 96,27 96,73 50,96 4,73 4,27" />
       </svg>
-      <span className="life-counter-hex-label">Settings</span>
     </button>
   )
 }
