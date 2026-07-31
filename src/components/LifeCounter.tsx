@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useHoldAdjust } from '../useHoldAdjust'
+import { useHoldAdjust, useHoldTrigger } from '../useHoldAdjust'
 
 const DEFAULT_PLAYER_COUNT = 4
 const DEFAULT_STARTING_LIFE = 40
@@ -55,6 +55,14 @@ function syncCommanderDamage(
 }
 
 type PanelOrientation = 'left' | 'right' | 'neutral'
+
+type PlayerTheme = 'white' | 'blue' | 'black' | 'red' | 'green'
+
+const PLAYER_THEMES: PlayerTheme[] = ['white', 'blue', 'black', 'red', 'green']
+
+function getPlayerTheme(index: number): PlayerTheme {
+  return PLAYER_THEMES[index % PLAYER_THEMES.length]
+}
 
 interface TableSeat {
   row: number
@@ -264,23 +272,18 @@ function CommanderDamageView({
   player,
   players,
   commanderDamage,
-  orientation,
   onAdjustReceived,
 }: {
   player: CounterPlayer
   players: CounterPlayer[]
   commanderDamage: Record<string, Record<string, number>>
-  orientation: PanelOrientation
   onAdjustReceived: (fromId: string, delta: number) => void
 }) {
   const displayName = player.name.trim() || 'Unnamed'
   const sources = players.filter((other) => other.id !== player.id)
 
   return (
-    <div
-      className={`life-counter-commander-view life-counter-panel-content-${orientation}`}
-      onClick={(event) => event.stopPropagation()}
-    >
+    <div className="life-counter-commander-view" onClick={(event) => event.stopPropagation()}>
       <p className="life-counter-commander-view-title">Commander — {displayName}</p>
       <ul className="life-counter-commander-rows">
         {sources.map((source) => (
@@ -323,12 +326,39 @@ function PlayerLifePanel({
 }) {
   const applyChange = useCallback((delta: number) => onAdjust(delta), [onAdjust])
   const { startHold, endHold, clearTimers } = useHoldAdjust(applyChange)
+  const {
+    startHold: startCommanderHold,
+    endHold: endCommanderHold,
+    clear: clearCommanderHold,
+  } = useHoldTrigger(onOpenCommanderView)
 
   useEffect(() => () => clearTimers(), [clearTimers])
+  useEffect(() => () => clearCommanderHold(), [clearCommanderHold])
 
   const zoneProps = useZoneProps(startHold, endHold, clearTimers)
 
   const displayName = player.name.trim() || 'Unnamed'
+
+  const commanderHoldProps = {
+    onPointerDown: (event: React.PointerEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      startCommanderHold()
+    },
+    onPointerUp: (event: React.PointerEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+      endCommanderHold()
+    },
+    onPointerCancel: (event: React.PointerEvent) => {
+      event.stopPropagation()
+      clearCommanderHold()
+    },
+  }
 
   if (commanderViewOpen) {
     return (
@@ -337,7 +367,6 @@ function PlayerLifePanel({
           player={player}
           players={players}
           commanderDamage={commanderDamage}
-          orientation={orientation}
           onAdjustReceived={onAdjustCommanderReceived}
         />
       </div>
@@ -396,13 +425,11 @@ function PlayerLifePanel({
           <button
             type="button"
             className="life-counter-commander-btn"
-            onClick={(event) => {
-              event.stopPropagation()
-              onOpenCommanderView()
-            }}
+            {...commanderHoldProps}
           >
             Commander
           </button>
+          <span className="life-counter-commander-hint">Hold 1s</span>
         </div>
       </div>
 
@@ -454,7 +481,7 @@ function LifeCounterGame({
           return (
             <div
               key={player.id}
-              className="life-counter-grid-cell"
+              className={`life-counter-grid-cell life-counter-theme-${getPlayerTheme(index)}`}
               style={{ gridColumn: seat.col, gridRow: seat.row }}
               onClick={() => {
                 if (commanderViewPlayerId && commanderViewPlayerId !== player.id) {
