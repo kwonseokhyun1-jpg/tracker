@@ -329,7 +329,6 @@ function PlayerLifePanel({
   const zoneProps = useZoneProps(startHold, endHold, clearTimers)
 
   const displayName = player.name.trim() || 'Unnamed'
-  const minusOnLeft = orientation !== 'right'
 
   if (commanderViewOpen) {
     return (
@@ -367,7 +366,7 @@ function PlayerLifePanel({
     <div
       className={`life-counter-player-panel ${isActive ? 'life-counter-player-panel-active' : ''}`}
     >
-      {minusOnLeft ? minusZone : plusZone}
+      {minusZone}
 
       <div
         className={`life-counter-panel-content life-counter-panel-content-${orientation}`}
@@ -399,7 +398,7 @@ function PlayerLifePanel({
         </div>
       </div>
 
-      {minusOnLeft ? plusZone : minusZone}
+      {plusZone}
     </div>
   )
 }

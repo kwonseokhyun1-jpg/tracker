@@ -1004,7 +1004,8 @@ legend {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: 1fr minmax(0, 1.4fr) 1fr;
+  grid-template-rows: 1fr minmax(0, 1.4fr) 1fr;
+  grid-template-columns: none;
   align-items: stretch;
   width: 100%;
   height: 100%;
@@ -1076,11 +1077,11 @@ legend {
 }
 
 .life-counter-zone-minus {
-  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .life-counter-zone-plus {
-  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
 }
 
 .life-counter-zone-minus:active,
