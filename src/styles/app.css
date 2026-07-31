@@ -1074,6 +1074,7 @@ legend {
   min-width: 0;
   cursor: pointer;
   text-align: center;
+  transform: rotate(180deg);
 }
 
 .life-counter-panel-name {
@@ -1164,12 +1165,6 @@ legend {
 .life-counter-hex-btn:hover .life-counter-hex-icon polygon {
   fill: var(--surface-hover);
   stroke: var(--accent);
-}
-
-.life-counter-hex-label {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .life-counter-commander-wrap {
