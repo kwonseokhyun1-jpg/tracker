@@ -971,27 +971,79 @@ legend {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: 0.75rem;
+  padding: 0;
   position: relative;
+}
+
+.life-counter-game-table {
+  overflow: hidden;
 }
 
 .life-counter-grid {
   display: grid;
-  gap: 0.5rem;
+  gap: 0;
   flex: 1;
   min-height: 0;
-  align-content: stretch;
+  width: 100%;
+}
+
+.life-counter-grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.life-counter-player-rotate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.life-counter-player-rotate-left,
+.life-counter-player-rotate-right {
+  width: 100%;
+  height: 100%;
+}
+
+.life-counter-player-rotate-left {
+  transform: rotate(-90deg);
+}
+
+.life-counter-player-rotate-right {
+  transform: rotate(90deg);
+}
+
+.life-counter-player-rotate-left .life-counter-player-panel-vertical,
+.life-counter-player-rotate-right .life-counter-player-panel-vertical {
+  width: 100%;
+  height: 145%;
+  max-height: none;
 }
 
 .life-counter-player-panel {
   display: grid;
   grid-template-columns: minmax(2.5rem, 1fr) minmax(0, 2fr) minmax(2.5rem, 1fr);
   align-items: stretch;
+  width: 100%;
+  height: 100%;
   min-height: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   background: var(--surface);
   overflow: hidden;
+}
+
+.life-counter-player-panel-vertical {
+  grid-template-columns: none;
+  grid-template-rows: minmax(2.5rem, 1fr) minmax(0, 2fr) minmax(2.5rem, 1fr);
+  width: 100%;
+  height: 100%;
+  min-width: 14rem;
+  min-height: 0;
 }
 
 .life-counter-player-panel-active {
@@ -1029,7 +1081,7 @@ legend {
 
 .life-counter-panel-life {
   margin: 0;
-  font-size: clamp(1.75rem, 8vw, 3rem);
+  font-size: clamp(2rem, 10vh, 4.5rem);
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -1048,7 +1100,8 @@ legend {
   touch-action: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  min-height: 5rem;
+  min-height: 2.5rem;
+  min-width: 2.5rem;
 }
 
 .life-counter-zone-minus:active,
@@ -1203,12 +1256,7 @@ legend {
 }
 
 .life-counter-hint {
-  margin: 0.5rem 0 0;
-  padding: 0 0.25rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-align: center;
-  flex-shrink: 0;
+  display: none;
 }
 
 @media (max-width: 600px) {
