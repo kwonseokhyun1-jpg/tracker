@@ -54,11 +54,31 @@ function syncCommanderDamage(
   return next
 }
 
-function gridColumns(playerCount: number): number {
-  if (playerCount <= 1) return 1
-  if (playerCount <= 4) return 2
-  if (playerCount <= 6) return 3
-  return 4
+type PanelOrientation = 'up' | 'down' | 'neutral'
+
+interface TableSeat {
+  row: number
+  col: number
+  orientation: PanelOrientation
+}
+
+function getTableSeats(playerCount: number): TableSeat[] {
+  const columns = playerCount === 1 ? 1 : 2
+
+  return Array.from({ length: playerCount }, (_, index) => {
+    const row = Math.floor(index / columns) + 1
+    const col = (index % columns) + 1
+
+    if (playerCount === 1) {
+      return { row, col, orientation: 'neutral' as const }
+    }
+
+    return {
+      row,
+      col,
+      orientation: row === 1 ? ('up' as const) : ('down' as const),
+    }
+  })
 }
 
 function HexagonButton({ onClick, label }: { onClick: () => void; label: string }) {
@@ -189,6 +209,7 @@ function PlayerLifePanel({
   onSelectCommanderTarget,
   onCommanderPickerClose,
   commanderTargets,
+  orientation,
 }: {
   player: CounterPlayer
   life: number
@@ -203,6 +224,7 @@ function PlayerLifePanel({
   onSelectCommanderTarget: (targetId: string) => void
   onCommanderPickerClose: () => void
   commanderTargets: { player: CounterPlayer; dealt: number }[]
+  orientation: PanelOrientation
 }) {
   const applyChange = useCallback((delta: number) => onAdjust(delta), [onAdjust])
   const { startHold, endHold, clearTimers } = useHoldAdjust(applyChange)
@@ -232,12 +254,13 @@ function PlayerLifePanel({
 
   const displayName = player.name.trim() || 'Unnamed'
   const showingCommanderAdjust = isActive && commanderMode && commanderTarget
+  const isVertical = orientation !== 'neutral'
 
-  return (
+  const panel = (
     <div
-      className={`life-counter-player-panel ${isActive ? 'life-counter-player-panel-active' : ''} ${
-        showingCommanderAdjust ? 'life-counter-player-panel-commander' : ''
-      }`}
+      className={`life-counter-player-panel ${isVertical ? 'life-counter-player-panel-vertical' : ''} ${
+        isActive ? 'life-counter-player-panel-active' : ''
+      } ${showingCommanderAdjust ? 'life-counter-player-panel-commander' : ''}`}
     >
       <button
         type="button"
@@ -340,6 +363,16 @@ function PlayerLifePanel({
       />
     </div>
   )
+
+  if (orientation === 'neutral') {
+    return panel
+  }
+
+  return (
+    <div className={`life-counter-player-rotate life-counter-player-rotate-${orientation}`}>
+      {panel}
+    </div>
+  )
 }
 
 function LifeCounterGame({
@@ -402,13 +435,20 @@ function LifeCounterGame({
     onCommanderPickerOpenChange(false)
   }
 
+  const tableSeats = getTableSeats(players.length)
+  const rowCount = tableSeats.reduce((max, seat) => Math.max(max, seat.row), 0)
+
   return (
-    <div className="life-counter-game">
+    <div className="life-counter-game life-counter-game-table">
       <div
         className="life-counter-grid"
-        style={{ gridTemplateColumns: `repeat(${gridColumns(players.length)}, 1fr)` }}
+        style={{
+          gridTemplateColumns: players.length === 1 ? '1fr' : '1fr 1fr',
+          gridTemplateRows: `repeat(${rowCount}, 1fr)`,
+        }}
       >
-        {players.map((player) => {
+        {players.map((player, index) => {
+          const seat = tableSeats[index]
           const isActive = player.id === activePlayerId
           const commanderTargets = players
             .filter((other) => other.id !== player.id)
@@ -418,27 +458,33 @@ function LifeCounterGame({
             }))
 
           return (
-            <PlayerLifePanel
+            <div
               key={player.id}
-              player={player}
-              life={lives[player.id] ?? 0}
-              isActive={isActive}
-              commanderMode={commanderMode}
-              commanderTarget={isActive ? commanderTarget : null}
-              commanderDamageDealt={
-                commanderTargetId ? (commanderDamage[player.id]?.[commanderTargetId] ?? 0) : 0
-              }
-              commanderPickerOpen={isActive && commanderPickerOpen}
-              onSelect={() => {
-                onActivePlayerChange(player.id)
-                onCommanderPickerOpenChange(false)
-              }}
-              onAdjust={(delta) => handlePanelAdjust(player.id, delta)}
-              onCommanderClick={handleCommanderClick}
-              onSelectCommanderTarget={handleSelectCommanderTarget}
-              onCommanderPickerClose={() => onCommanderPickerOpenChange(false)}
-              commanderTargets={commanderTargets}
-            />
+              className="life-counter-grid-cell"
+              style={{ gridColumn: seat.col, gridRow: seat.row }}
+            >
+              <PlayerLifePanel
+                player={player}
+                life={lives[player.id] ?? 0}
+                isActive={isActive}
+                commanderMode={commanderMode}
+                commanderTarget={isActive ? commanderTarget : null}
+                commanderDamageDealt={
+                  commanderTargetId ? (commanderDamage[player.id]?.[commanderTargetId] ?? 0) : 0
+                }
+                commanderPickerOpen={isActive && commanderPickerOpen}
+                orientation={seat.orientation}
+                onSelect={() => {
+                  onActivePlayerChange(player.id)
+                  onCommanderPickerOpenChange(false)
+                }}
+                onAdjust={(delta) => handlePanelAdjust(player.id, delta)}
+                onCommanderClick={handleCommanderClick}
+                onSelectCommanderTarget={handleSelectCommanderTarget}
+                onCommanderPickerClose={() => onCommanderPickerOpenChange(false)}
+                commanderTargets={commanderTargets}
+              />
+            </div>
           )
         })}
       </div>
