@@ -54,7 +54,7 @@ function syncCommanderDamage(
   return next
 }
 
-type PanelOrientation = 'left' | 'right' | 'neutral'
+type PanelOrientation = 'up' | 'down' | 'neutral'
 
 interface TableSeat {
   row: number
@@ -76,7 +76,7 @@ function getTableSeats(playerCount: number): TableSeat[] {
     return {
       row,
       col,
-      orientation: col === 1 ? ('left' as const) : ('right' as const),
+      orientation: row === 1 ? ('up' as const) : ('down' as const),
     }
   })
 }
@@ -369,9 +369,7 @@ function PlayerLifePanel({
   }
 
   return (
-    <div
-      className={`life-counter-player-rotate life-counter-player-rotate-${orientation}`}
-    >
+    <div className={`life-counter-player-rotate life-counter-player-rotate-${orientation}`}>
       {panel}
     </div>
   )

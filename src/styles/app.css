@@ -1005,25 +1005,20 @@ legend {
   height: 100%;
 }
 
-.life-counter-player-rotate-left,
-.life-counter-player-rotate-right {
+.life-counter-player-rotate-up,
+.life-counter-player-rotate-down {
   width: 100%;
   height: 100%;
 }
 
-.life-counter-player-rotate-left {
-  transform: rotate(-90deg);
+.life-counter-player-rotate-up {
+  transform: rotate(180deg);
 }
 
-.life-counter-player-rotate-right {
-  transform: rotate(90deg);
-}
-
-.life-counter-player-rotate-left .life-counter-player-panel-vertical,
-.life-counter-player-rotate-right .life-counter-player-panel-vertical {
+.life-counter-player-rotate-up .life-counter-player-panel-vertical,
+.life-counter-player-rotate-down .life-counter-player-panel-vertical {
   width: 100%;
-  height: 145%;
-  max-height: none;
+  height: 100%;
 }
 
 .life-counter-player-panel {
