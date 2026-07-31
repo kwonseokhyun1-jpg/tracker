@@ -253,27 +253,44 @@ function PlayerLifePanel({
 
   const displayName = player.name.trim() || 'Unnamed'
   const showingCommanderAdjust = isActive && commanderMode && commanderTarget
-  const isVertical = orientation !== 'neutral'
+  const minusOnLeft = orientation !== 'right'
 
-  const panel = (
+  const minusZone = (
+    <button
+      type="button"
+      className="life-counter-zone life-counter-zone-minus"
+      aria-label={
+        showingCommanderAdjust
+          ? `Decrease commander damage to ${commanderTarget.name.trim() || 'Unnamed'}`
+          : `Decrease ${displayName} life`
+      }
+      {...zoneProps(-1)}
+    />
+  )
+
+  const plusZone = (
+    <button
+      type="button"
+      className="life-counter-zone life-counter-zone-plus"
+      aria-label={
+        showingCommanderAdjust
+          ? `Increase commander damage to ${commanderTarget.name.trim() || 'Unnamed'}`
+          : `Increase ${displayName} life`
+      }
+      {...zoneProps(1)}
+    />
+  )
+
+  return (
     <div
-      className={`life-counter-player-panel ${isVertical ? 'life-counter-player-panel-vertical' : ''} ${
+      className={`life-counter-player-panel ${
         isActive ? 'life-counter-player-panel-active' : ''
       } ${showingCommanderAdjust ? 'life-counter-player-panel-commander' : ''}`}
     >
-      <button
-        type="button"
-        className="life-counter-zone life-counter-zone-minus"
-        aria-label={
-          showingCommanderAdjust
-            ? `Decrease commander damage to ${commanderTarget.name.trim() || 'Unnamed'}`
-            : `Decrease ${displayName} life`
-        }
-        {...zoneProps(-1)}
-      />
+      {minusOnLeft ? minusZone : plusZone}
 
       <div
-        className="life-counter-panel-content"
+        className={`life-counter-panel-content life-counter-panel-content-${orientation}`}
         onClick={onSelect}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -350,26 +367,7 @@ function PlayerLifePanel({
         )}
       </div>
 
-      <button
-        type="button"
-        className="life-counter-zone life-counter-zone-plus"
-        aria-label={
-          showingCommanderAdjust
-            ? `Increase commander damage to ${commanderTarget.name.trim() || 'Unnamed'}`
-            : `Increase ${displayName} life`
-        }
-        {...zoneProps(1)}
-      />
-    </div>
-  )
-
-  if (orientation === 'neutral') {
-    return panel
-  }
-
-  return (
-    <div className={`life-counter-player-rotate life-counter-player-rotate-${orientation}`}>
-      {panel}
+      {minusOnLeft ? plusZone : minusZone}
     </div>
   )
 }

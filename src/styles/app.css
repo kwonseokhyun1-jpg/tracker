@@ -998,60 +998,19 @@ legend {
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--border);
-  container-type: size;
-}
-
-.life-counter-player-rotate {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: flex;
-  align-items: stretch;
-  justify-content: stretch;
-}
-
-.life-counter-player-rotate-left,
-.life-counter-player-rotate-right {
-  width: 100cqh;
-  height: 100cqw;
-  max-width: none;
-  max-height: none;
-}
-
-.life-counter-player-rotate-left {
-  transform: translate(-50%, -50%) rotate(-90deg);
-}
-
-.life-counter-player-rotate-right {
-  transform: translate(-50%, -50%) rotate(90deg);
-}
-
-.life-counter-player-rotate-left .life-counter-player-panel-vertical,
-.life-counter-player-rotate-right .life-counter-player-panel-vertical {
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  max-height: none;
 }
 
 .life-counter-player-panel {
+  position: absolute;
+  inset: 0;
   display: grid;
-  grid-template-columns: minmax(2.5rem, 1fr) minmax(0, 2fr) minmax(2.5rem, 1fr);
+  grid-template-columns: 1fr minmax(0, 1.4fr) 1fr;
   align-items: stretch;
   width: 100%;
   height: 100%;
   min-height: 0;
   background: var(--surface);
   overflow: hidden;
-}
-
-.life-counter-player-panel-vertical {
-  grid-template-columns: none;
-  grid-template-rows: minmax(3rem, 1fr) minmax(0, 2.5fr) minmax(3rem, 1fr);
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
 }
 
 .life-counter-player-panel-active {
@@ -1072,8 +1031,20 @@ legend {
   gap: 0.375rem;
   padding: 0.5rem;
   min-width: 0;
+  min-height: 0;
   cursor: pointer;
   text-align: center;
+}
+
+.life-counter-panel-content-left {
+  transform: rotate(90deg);
+}
+
+.life-counter-panel-content-right {
+  transform: rotate(-90deg);
+}
+
+.life-counter-panel-content-neutral {
   transform: rotate(180deg);
 }
 
@@ -1109,10 +1080,18 @@ legend {
   touch-action: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  min-height: 3rem;
-  min-width: 3rem;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.life-counter-zone-minus {
+  border-right: 1px solid var(--border);
+}
+
+.life-counter-zone-plus {
+  border-left: 1px solid var(--border);
 }
 
 .life-counter-zone-minus:active,
