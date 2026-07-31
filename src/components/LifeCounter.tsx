@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useHoldAdjust } from '../useHoldAdjust'
 
 const DEFAULT_PLAYER_COUNT = 4
@@ -52,6 +52,13 @@ function syncCommanderDamage(
     }
   }
   return next
+}
+
+function gridColumns(playerCount: number): number {
+  if (playerCount <= 1) return 1
+  if (playerCount <= 4) return 2
+  if (playerCount <= 6) return 3
+  return 4
 }
 
 function HexagonButton({ onClick, label }: { onClick: () => void; label: string }) {
@@ -168,6 +175,173 @@ function LifeCounterSettings({
   )
 }
 
+function PlayerLifePanel({
+  player,
+  life,
+  isActive,
+  commanderMode,
+  commanderTarget,
+  commanderDamageDealt,
+  commanderPickerOpen,
+  onSelect,
+  onAdjust,
+  onCommanderClick,
+  onSelectCommanderTarget,
+  onCommanderPickerClose,
+  commanderTargets,
+}: {
+  player: CounterPlayer
+  life: number
+  isActive: boolean
+  commanderMode: boolean
+  commanderTarget: CounterPlayer | null
+  commanderDamageDealt: number
+  commanderPickerOpen: boolean
+  onSelect: () => void
+  onAdjust: (delta: number) => void
+  onCommanderClick: () => void
+  onSelectCommanderTarget: (targetId: string) => void
+  onCommanderPickerClose: () => void
+  commanderTargets: { player: CounterPlayer; dealt: number }[]
+}) {
+  const applyChange = useCallback((delta: number) => onAdjust(delta), [onAdjust])
+  const { startHold, endHold, clearTimers } = useHoldAdjust(applyChange)
+
+  useEffect(() => () => clearTimers(), [clearTimers])
+
+  const zoneProps = (delta: number) => ({
+    onPointerDown: (event: React.PointerEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      startHold(delta)
+    },
+    onPointerUp: (event: React.PointerEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+      endHold()
+    },
+    onPointerCancel: (event: React.PointerEvent) => {
+      event.stopPropagation()
+      clearTimers()
+    },
+  })
+
+  const displayName = player.name.trim() || 'Unnamed'
+  const showingCommanderAdjust = isActive && commanderMode && commanderTarget
+
+  return (
+    <div
+      className={`life-counter-player-panel ${isActive ? 'life-counter-player-panel-active' : ''} ${
+        showingCommanderAdjust ? 'life-counter-player-panel-commander' : ''
+      }`}
+    >
+      <button
+        type="button"
+        className="life-counter-zone life-counter-zone-minus"
+        aria-label={
+          showingCommanderAdjust
+            ? `Decrease commander damage to ${commanderTarget.name.trim() || 'Unnamed'}`
+            : `Decrease ${displayName} life`
+        }
+        {...zoneProps(-1)}
+      />
+
+      <div
+        className="life-counter-panel-content"
+        onClick={onSelect}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            onSelect()
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Select ${displayName}`}
+      >
+        <p className="life-counter-panel-name">{displayName}</p>
+        <p className="life-counter-panel-life">{life}</p>
+
+        {isActive && (
+          <div className="life-counter-commander-wrap">
+            <button
+              type="button"
+              className={`life-counter-commander-btn ${
+                commanderMode ? 'life-counter-commander-btn-active' : ''
+              }`}
+              onClick={(event) => {
+                event.stopPropagation()
+                onCommanderClick()
+              }}
+              aria-pressed={commanderMode}
+            >
+              Commander
+              {commanderMode && commanderTarget
+                ? ` → ${commanderTarget.name.trim() || 'Unnamed'}`
+                : ''}
+            </button>
+
+            {commanderPickerOpen && (
+              <div
+                className="life-counter-commander-picker"
+                role="menu"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <p className="life-counter-commander-picker-title">
+                  Commander damage from {displayName}
+                </p>
+                <ul>
+                  {commanderTargets.map(({ player: target, dealt }) => (
+                    <li key={target.id}>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="life-counter-commander-option"
+                        onClick={() => onSelectCommanderTarget(target.id)}
+                      >
+                        <span>{target.name.trim() || 'Unnamed'}</span>
+                        <span className="life-counter-commander-dealt">{dealt} dealt</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary life-counter-picker-close"
+                  onClick={onCommanderPickerClose}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {showingCommanderAdjust && (
+          <p className="life-counter-panel-commander-dealt">
+            {commanderDamageDealt} commander to {commanderTarget.name.trim() || 'Unnamed'}
+          </p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        className="life-counter-zone life-counter-zone-plus"
+        aria-label={
+          showingCommanderAdjust
+            ? `Increase commander damage to ${commanderTarget.name.trim() || 'Unnamed'}`
+            : `Increase ${displayName} life`
+        }
+        {...zoneProps(1)}
+      />
+    </div>
+  )
+}
+
 function LifeCounterGame({
   players,
   lives,
@@ -199,38 +373,15 @@ function LifeCounterGame({
   onCommanderPickerOpenChange: (open: boolean) => void
   onBackToSettings: () => void
 }) {
-  const activePlayer = players.find((player) => player.id === activePlayerId) ?? players[0]
-  const activeIndex = players.findIndex((player) => player.id === activePlayer.id)
+  const commanderTarget = players.find((player) => player.id === commanderTargetId) ?? null
 
-  const applyChange = useCallback(
-    (delta: number) => {
-      if (commanderMode && commanderTargetId) {
-        onCommanderDamageChange(activePlayer.id, commanderTargetId, delta)
-        return
-      }
-      onLifeChange(activePlayer.id, delta)
-    },
-    [
-      activePlayer.id,
-      commanderMode,
-      commanderTargetId,
-      onCommanderDamageChange,
-      onLifeChange,
-    ],
-  )
-
-  const { startHold, endHold, clearTimers } = useHoldAdjust(applyChange)
-
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  const displayValue = useMemo(() => {
-    if (commanderMode && commanderTargetId) {
-      return commanderDamage[activePlayer.id]?.[commanderTargetId] ?? 0
+  const handlePanelAdjust = (playerId: string, delta: number) => {
+    if (playerId === activePlayerId && commanderMode && commanderTargetId) {
+      onCommanderDamageChange(playerId, commanderTargetId, delta)
+      return
     }
-    return lives[activePlayer.id] ?? 0
-  }, [activePlayer.id, commanderDamage, commanderMode, commanderTargetId, lives])
-
-  const commanderTarget = players.find((player) => player.id === commanderTargetId)
+    onLifeChange(playerId, delta)
+  }
 
   const handleCommanderClick = () => {
     if (commanderMode) {
@@ -251,133 +402,57 @@ function LifeCounterGame({
     onCommanderPickerOpenChange(false)
   }
 
-  const zoneProps = (delta: number) => ({
-    onPointerDown: (event: React.PointerEvent) => {
-      event.preventDefault()
-      event.currentTarget.setPointerCapture(event.pointerId)
-      startHold(delta)
-    },
-    onPointerUp: (event: React.PointerEvent) => {
-      event.preventDefault()
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId)
-      }
-      endHold()
-    },
-    onPointerCancel: () => {
-      clearTimers()
-    },
-  })
-
   return (
     <div className="life-counter-game">
-      <div className="life-counter-player-tabs" role="tablist" aria-label="Players">
-        {players.map((player) => (
-          <button
-            key={player.id}
-            type="button"
-            role="tab"
-            aria-selected={player.id === activePlayer.id}
-            className={`life-counter-player-tab ${
-              player.id === activePlayer.id ? 'life-counter-player-tab-active' : ''
-            }`}
-            onClick={() => {
-              onActivePlayerChange(player.id)
-              onCommanderPickerOpenChange(false)
-            }}
-          >
-            {player.name.trim() || 'Unnamed'}
-          </button>
-        ))}
+      <div
+        className="life-counter-grid"
+        style={{ gridTemplateColumns: `repeat(${gridColumns(players.length)}, 1fr)` }}
+      >
+        {players.map((player) => {
+          const isActive = player.id === activePlayerId
+          const commanderTargets = players
+            .filter((other) => other.id !== player.id)
+            .map((other) => ({
+              player: other,
+              dealt: commanderDamage[player.id]?.[other.id] ?? 0,
+            }))
+
+          return (
+            <PlayerLifePanel
+              key={player.id}
+              player={player}
+              life={lives[player.id] ?? 0}
+              isActive={isActive}
+              commanderMode={commanderMode}
+              commanderTarget={isActive ? commanderTarget : null}
+              commanderDamageDealt={
+                commanderTargetId ? (commanderDamage[player.id]?.[commanderTargetId] ?? 0) : 0
+              }
+              commanderPickerOpen={isActive && commanderPickerOpen}
+              onSelect={() => {
+                onActivePlayerChange(player.id)
+                onCommanderPickerOpenChange(false)
+              }}
+              onAdjust={(delta) => handlePanelAdjust(player.id, delta)}
+              onCommanderClick={handleCommanderClick}
+              onSelectCommanderTarget={handleSelectCommanderTarget}
+              onCommanderPickerClose={() => onCommanderPickerOpenChange(false)}
+              commanderTargets={commanderTargets}
+            />
+          )
+        })}
       </div>
 
-      <div className="life-counter-game-body">
-        <p className="life-counter-active-name">{activePlayer.name.trim() || 'Unnamed'}</p>
-
-        <div className="life-counter-adjust-surface">
-          <button
-            type="button"
-            className="life-counter-zone life-counter-zone-minus"
-            aria-label={commanderMode ? 'Decrease commander damage' : 'Decrease life'}
-            {...zoneProps(-1)}
-          />
-
-          <div className="life-counter-center">
-            <p
-              className={`life-counter-value ${
-                commanderMode ? 'life-counter-value-commander' : ''
-              }`}
-            >
-              {displayValue}
-            </p>
-            <HexagonButton onClick={onBackToSettings} label="Back to settings" />
-          </div>
-
-          <button
-            type="button"
-            className="life-counter-zone life-counter-zone-plus"
-            aria-label={commanderMode ? 'Increase commander damage' : 'Increase life'}
-            {...zoneProps(1)}
-          />
-        </div>
-
-        <div className="life-counter-commander-wrap">
-          <button
-            type="button"
-            className={`life-counter-commander-btn ${
-              commanderMode ? 'life-counter-commander-btn-active' : ''
-            }`}
-            onClick={handleCommanderClick}
-            aria-pressed={commanderMode}
-          >
-            Commander
-            {commanderMode && commanderTarget
-              ? ` → ${commanderTarget.name.trim() || 'Unnamed'}`
-              : ''}
-          </button>
-
-          {commanderPickerOpen && (
-            <div className="life-counter-commander-picker" role="menu">
-              <p className="life-counter-commander-picker-title">
-                Commander damage from {activePlayer.name.trim() || 'Unnamed'}
-              </p>
-              <ul>
-                {players
-                  .filter((player) => player.id !== activePlayer.id)
-                  .map((player) => {
-                    const dealt = commanderDamage[activePlayer.id]?.[player.id] ?? 0
-                    return (
-                      <li key={player.id}>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="life-counter-commander-option"
-                          onClick={() => handleSelectCommanderTarget(player.id)}
-                        >
-                          <span>{player.name.trim() || 'Unnamed'}</span>
-                          <span className="life-counter-commander-dealt">{dealt} dealt</span>
-                        </button>
-                      </li>
-                    )
-                  })}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {!commanderMode && (
-          <p className="life-counter-hint">
-            Tap sides to adjust · hold for ±10
-            {activeIndex >= 0 ? ` · Player ${activeIndex + 1} of ${players.length}` : ''}
-          </p>
-        )}
-        {commanderMode && commanderTarget && (
-          <p className="life-counter-hint life-counter-hint-commander">
-            Commander damage to {commanderTarget.name.trim() || 'Unnamed'} · tap sides to adjust ·
-            hold for ±10
-          </p>
-        )}
+      <div className="life-counter-hex-overlay">
+        <HexagonButton onClick={onBackToSettings} label="Back to settings" />
       </div>
+
+      <p className="life-counter-hint">
+        All players shown · tap a panel to select · sides adjust life · hold for ±10
+        {commanderMode && commanderTarget
+          ? ` · commander mode: damage also reduces ${commanderTarget.name.trim() || 'Unnamed'}'s life`
+          : ''}
+      </p>
     </div>
   )
 }
@@ -471,6 +546,10 @@ export function LifeCounter({ open, onClose }: LifeCounterProps) {
         ...prev[fromId],
         [toId]: Math.max(0, (prev[fromId]?.[toId] ?? 0) + delta),
       },
+    }))
+    setLives((prev) => ({
+      ...prev,
+      [toId]: Math.max(0, (prev[toId] ?? 0) - delta),
     }))
   }
 
