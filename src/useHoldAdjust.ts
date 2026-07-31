@@ -1,42 +1,42 @@
 import { useCallback, useRef } from 'react'
 
-const HOLD_DELAY_MS = 400
-const HOLD_REPEAT_MS = 120
+const HOLD_BULK_MS = 2000
 
 export function useHoldAdjust(onAdjust: (amount: number) => void) {
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const bulkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const isHoldingRef = useRef(false)
+  const hasBulkedRef = useRef(false)
   const deltaRef = useRef(1)
 
   const clearTimers = useCallback(() => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current)
-      holdTimerRef.current = null
+    if (bulkTimerRef.current) {
+      clearTimeout(bulkTimerRef.current)
+      bulkTimerRef.current = null
     }
     if (repeatTimerRef.current) {
       clearInterval(repeatTimerRef.current)
       repeatTimerRef.current = null
     }
-    isHoldingRef.current = false
+    hasBulkedRef.current = false
   }, [])
 
   const startHold = useCallback(
     (delta: number) => {
       clearTimers()
       deltaRef.current = delta
+      hasBulkedRef.current = false
 
-      holdTimerRef.current = setTimeout(() => {
-        isHoldingRef.current = true
+      bulkTimerRef.current = setTimeout(() => {
+        hasBulkedRef.current = true
         onAdjust(delta * 10)
-        repeatTimerRef.current = setInterval(() => onAdjust(delta * 10), HOLD_REPEAT_MS)
-      }, HOLD_DELAY_MS)
+        repeatTimerRef.current = setInterval(() => onAdjust(delta * 10), HOLD_BULK_MS)
+      }, HOLD_BULK_MS)
     },
     [clearTimers, onAdjust],
   )
 
   const endHold = useCallback(() => {
-    if (!isHoldingRef.current) {
+    if (!hasBulkedRef.current) {
       onAdjust(deltaRef.current)
     }
     clearTimers()
