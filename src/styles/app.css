@@ -867,6 +867,348 @@ legend {
   margin: 0;
 }
 
+.panel-header-with-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.life-counter-play-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.life-counter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.life-counter-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.life-counter-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.life-counter-settings-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.life-counter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.life-counter-field input {
+  width: 100%;
+}
+
+.life-counter-players-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.life-counter-players-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-weight: 600;
+}
+
+.life-counter-player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.life-counter-player-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.life-counter-player-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.life-counter-start-btn {
+  margin-top: auto;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+.life-counter-game {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.life-counter-player-tabs {
+  display: flex;
+  gap: 0.375rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.life-counter-player-tab {
+  flex-shrink: 0;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.life-counter-player-tab-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.life-counter-game-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  min-height: 0;
+  position: relative;
+}
+
+.life-counter-active-name {
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.life-counter-adjust-surface {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  max-width: 640px;
+  flex: 1;
+  min-height: 280px;
+  max-height: 60vh;
+}
+
+.life-counter-zone {
+  height: 100%;
+  min-height: 200px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.life-counter-zone-minus {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.life-counter-zone-plus {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.life-counter-zone:active {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.life-counter-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0 0.5rem;
+  pointer-events: none;
+}
+
+.life-counter-center > * {
+  pointer-events: auto;
+}
+
+.life-counter-value {
+  margin: 0;
+  font-size: clamp(3.5rem, 18vw, 6rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.life-counter-value-commander {
+  color: #f59e0b;
+}
+
+.life-counter-hex-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.life-counter-hex-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.life-counter-hex-icon polygon {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 3;
+  transition: fill 0.15s, stroke 0.15s;
+}
+
+.life-counter-hex-btn:hover .life-counter-hex-icon polygon {
+  fill: var(--surface-hover);
+  stroke: var(--accent);
+}
+
+.life-counter-hex-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.life-counter-commander-wrap {
+  position: relative;
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.life-counter-commander-btn {
+  padding: 0.625rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.life-counter-commander-btn-active {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+.life-counter-commander-picker {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, 320px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.75rem;
+  z-index: 10;
+}
+
+.life-counter-commander-picker-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.life-counter-commander-picker ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.life-counter-commander-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.life-counter-commander-option:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+}
+
+.life-counter-commander-dealt {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.life-counter-hint {
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.life-counter-hint-commander {
+  color: #d97706;
+}
+
 @media (max-width: 600px) {
   .stats-clear-filters {
     order: 1;
