@@ -1134,16 +1134,21 @@ legend {
   pointer-events: none;
 }
 
+.life-counter-zone-label-minus-rotated {
+  display: inline-block;
+  transform: rotate(90deg);
+}
+
 .life-counter-zone:active .life-counter-zone-label {
   opacity: 0.85;
   color: var(--player-accent, var(--accent));
 }
 
-.life-counter-zone-minus {
+.life-counter-player-panel > .life-counter-zone:first-child {
   border-bottom: 1px solid var(--player-border, var(--border));
 }
 
-.life-counter-zone-plus {
+.life-counter-player-panel > .life-counter-zone:last-child {
   border-top: 1px solid var(--player-border, var(--border));
 }
 
@@ -1318,11 +1323,11 @@ legend {
   color: var(--player-accent, var(--accent));
 }
 
-.life-counter-commander-zone-minus {
+.life-counter-commander-row-control > .life-counter-commander-zone:first-child {
   border-bottom: 1px solid var(--player-border, var(--border));
 }
 
-.life-counter-commander-zone-plus {
+.life-counter-commander-row-control > .life-counter-commander-zone:last-child {
   border-top: 1px solid var(--player-border, var(--border));
 }
 
