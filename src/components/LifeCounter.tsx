@@ -501,7 +501,16 @@ function LifeCounterGame({
       </div>
 
       <div className="life-counter-hex-overlay">
-        <HexagonButton onClick={onBackToSettings} label="Back to settings" />
+        <HexagonButton
+          onClick={() => {
+            if (commanderViewPlayerId) {
+              onCommanderViewPlayerChange(null)
+            } else {
+              onBackToSettings()
+            }
+          }}
+          label={commanderViewPlayerId ? 'Close commander damage' : 'Back to settings'}
+        />
       </div>
     </div>
   )
