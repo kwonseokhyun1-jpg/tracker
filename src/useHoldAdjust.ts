@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 
-const HOLD_BULK_MS = 1000
+const HOLD_BULK_MS = 700
 
 export function useHoldAdjust(onAdjust: (amount: number) => void) {
   const bulkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
