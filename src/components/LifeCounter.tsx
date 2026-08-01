@@ -225,7 +225,7 @@ function useZoneProps(startHold: (delta: number) => void, endHold: () => void, c
   })
 }
 
-function CommanderDamageRow({
+function CommanderDamageColumn({
   sourceName,
   damage,
   onAdjust,
@@ -243,26 +243,30 @@ function CommanderDamageRow({
   const label = sourceName.trim() || 'Unnamed'
 
   return (
-    <li className="life-counter-commander-row">
+    <li className="life-counter-commander-column">
       <button
         type="button"
-        className="life-counter-commander-adjust life-counter-commander-adjust-minus"
+        className="life-counter-commander-zone life-counter-commander-zone-minus"
         aria-label={`Decrease commander damage from ${label}`}
         {...zoneProps(-1)}
       >
-        −
+        <span className="life-counter-commander-zone-label" aria-hidden="true">
+          −
+        </span>
       </button>
-      <div className="life-counter-commander-row-info">
-        <span className="life-counter-commander-row-name">{label}</span>
-        <span className="life-counter-commander-row-damage">{damage}</span>
+      <div className="life-counter-commander-column-info">
+        <span className="life-counter-commander-column-name">{label}</span>
+        <span className="life-counter-commander-column-damage">{damage}</span>
       </div>
       <button
         type="button"
-        className="life-counter-commander-adjust life-counter-commander-adjust-plus"
+        className="life-counter-commander-zone life-counter-commander-zone-plus"
         aria-label={`Increase commander damage from ${label}`}
         {...zoneProps(1)}
       >
-        +
+        <span className="life-counter-commander-zone-label" aria-hidden="true">
+          +
+        </span>
       </button>
     </li>
   )
@@ -272,22 +276,27 @@ function CommanderDamageView({
   player,
   players,
   commanderDamage,
+  orientation,
   onAdjustReceived,
 }: {
   player: CounterPlayer
   players: CounterPlayer[]
   commanderDamage: Record<string, Record<string, number>>
+  orientation: PanelOrientation
   onAdjustReceived: (fromId: string, delta: number) => void
 }) {
   const displayName = player.name.trim() || 'Unnamed'
   const sources = players.filter((other) => other.id !== player.id)
 
   return (
-    <div className="life-counter-commander-view" onClick={(event) => event.stopPropagation()}>
+    <div
+      className={`life-counter-commander-view life-counter-commander-view-${orientation}`}
+      onClick={(event) => event.stopPropagation()}
+    >
       <p className="life-counter-commander-view-title">Commander — {displayName}</p>
-      <ul className="life-counter-commander-rows">
+      <ul className="life-counter-commander-columns">
         {sources.map((source) => (
-          <CommanderDamageRow
+          <CommanderDamageColumn
             key={source.id}
             sourceName={source.name}
             damage={commanderDamage[source.id]?.[player.id] ?? 0}
@@ -340,6 +349,7 @@ function PlayerLifePanel({
           player={player}
           players={players}
           commanderDamage={commanderDamage}
+          orientation={orientation}
           onAdjustReceived={onAdjustCommanderReceived}
         />
       </div>
