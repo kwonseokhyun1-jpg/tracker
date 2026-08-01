@@ -229,10 +229,12 @@ function CommanderDamageRow({
   sourceName,
   damage,
   onAdjust,
+  zonesReversed,
 }: {
   sourceName: string
   damage: number
   onAdjust: (delta: number) => void
+  zonesReversed: boolean
 }) {
   const applyChange = useCallback((delta: number) => onAdjust(delta), [onAdjust])
   const { startHold, endHold, clearTimers } = useHoldAdjust(applyChange)
@@ -242,31 +244,52 @@ function CommanderDamageRow({
   const zoneProps = useZoneProps(startHold, endHold, clearTimers)
   const label = sourceName.trim() || 'Unnamed'
 
+  const minusZone = (
+    <button
+      type="button"
+      className="life-counter-commander-zone life-counter-commander-zone-minus"
+      aria-label={`Decrease commander damage from ${label}`}
+      {...zoneProps(-1)}
+    >
+      <span
+        className={`life-counter-commander-zone-label${zonesReversed ? ' life-counter-zone-label-minus-rotated' : ''}`}
+        aria-hidden="true"
+      >
+        −
+      </span>
+    </button>
+  )
+
+  const plusZone = (
+    <button
+      type="button"
+      className="life-counter-commander-zone life-counter-commander-zone-plus"
+      aria-label={`Increase commander damage from ${label}`}
+      {...zoneProps(1)}
+    >
+      <span className="life-counter-commander-zone-label" aria-hidden="true">
+        +
+      </span>
+    </button>
+  )
+
   return (
     <li className="life-counter-commander-row">
       <span className="life-counter-commander-row-name">{label}</span>
       <div className="life-counter-commander-row-control">
-        <button
-          type="button"
-          className="life-counter-commander-zone life-counter-commander-zone-minus"
-          aria-label={`Decrease commander damage from ${label}`}
-          {...zoneProps(-1)}
-        >
-          <span className="life-counter-commander-zone-label" aria-hidden="true">
-            −
-          </span>
-        </button>
-        <span className="life-counter-commander-row-damage">{damage}</span>
-        <button
-          type="button"
-          className="life-counter-commander-zone life-counter-commander-zone-plus"
-          aria-label={`Increase commander damage from ${label}`}
-          {...zoneProps(1)}
-        >
-          <span className="life-counter-commander-zone-label" aria-hidden="true">
-            +
-          </span>
-        </button>
+        {zonesReversed ? (
+          <>
+            {plusZone}
+            <span className="life-counter-commander-row-damage">{damage}</span>
+            {minusZone}
+          </>
+        ) : (
+          <>
+            {minusZone}
+            <span className="life-counter-commander-row-damage">{damage}</span>
+            {plusZone}
+          </>
+        )}
       </div>
     </li>
   )
@@ -287,6 +310,7 @@ function CommanderDamageView({
 }) {
   const displayName = player.name.trim() || 'Unnamed'
   const sources = players.filter((other) => other.id !== player.id)
+  const zonesReversed = orientation === 'right'
 
   return (
     <div
@@ -300,6 +324,7 @@ function CommanderDamageView({
             key={source.id}
             sourceName={source.name}
             damage={commanderDamage[source.id]?.[player.id] ?? 0}
+            zonesReversed={zonesReversed}
             onAdjust={(delta) => onAdjustReceived(source.id, delta)}
           />
         ))}
@@ -341,6 +366,7 @@ function PlayerLifePanel({
   const zoneProps = useZoneProps(startHold, endHold, clearTimers)
 
   const displayName = player.name.trim() || 'Unnamed'
+  const zonesReversed = orientation === 'right'
 
   if (commanderViewOpen) {
     return (
@@ -363,7 +389,10 @@ function PlayerLifePanel({
       aria-label={`Decrease ${displayName} life`}
       {...zoneProps(-1)}
     >
-      <span className="life-counter-zone-label" aria-hidden="true">
+      <span
+        className={`life-counter-zone-label${zonesReversed ? ' life-counter-zone-label-minus-rotated' : ''}`}
+        aria-hidden="true"
+      >
         −
       </span>
     </button>
@@ -384,9 +413,9 @@ function PlayerLifePanel({
 
   return (
     <div
-      className={`life-counter-player-panel ${isActive ? 'life-counter-player-panel-active' : ''}`}
+      className={`life-counter-player-panel life-counter-player-panel-${orientation} ${isActive ? 'life-counter-player-panel-active' : ''}`}
     >
-      {minusZone}
+      {zonesReversed ? plusZone : minusZone}
 
       <div
         className={`life-counter-panel-content life-counter-panel-content-${orientation}`}
@@ -418,7 +447,7 @@ function PlayerLifePanel({
         </div>
       </div>
 
-      {plusZone}
+      {zonesReversed ? minusZone : plusZone}
     </div>
   )
 }
