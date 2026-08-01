@@ -1329,12 +1329,6 @@ legend {
   background: var(--player-zone-active, rgba(245, 158, 11, 0.15));
 }
 
-.life-counter-commander-hint {
-  font-size: 0.6rem;
-  color: var(--player-accent-muted, var(--text-muted));
-  opacity: 0.8;
-}
-
 .life-counter-hint {
   display: none;
 }
