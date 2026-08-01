@@ -2,31 +2,6 @@ import { useCallback, useRef } from 'react'
 
 const HOLD_BULK_MS = 1000
 
-export function useHoldTrigger(onTrigger: () => void, delayMs = HOLD_BULK_MS) {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const clear = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
-      timerRef.current = null
-    }
-  }, [])
-
-  const startHold = useCallback(() => {
-    clear()
-    timerRef.current = setTimeout(() => {
-      onTrigger()
-      timerRef.current = null
-    }, delayMs)
-  }, [clear, onTrigger, delayMs])
-
-  const endHold = useCallback(() => {
-    clear()
-  }, [clear])
-
-  return { startHold, endHold, clear }
-}
-
 export function useHoldAdjust(onAdjust: (amount: number) => void) {
   const bulkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)

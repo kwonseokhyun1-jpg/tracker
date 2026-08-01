@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useHoldAdjust, useHoldTrigger } from '../useHoldAdjust'
+import { useHoldAdjust } from '../useHoldAdjust'
 
 const DEFAULT_PLAYER_COUNT = 4
 const DEFAULT_STARTING_LIFE = 40
@@ -326,39 +326,12 @@ function PlayerLifePanel({
 }) {
   const applyChange = useCallback((delta: number) => onAdjust(delta), [onAdjust])
   const { startHold, endHold, clearTimers } = useHoldAdjust(applyChange)
-  const {
-    startHold: startCommanderHold,
-    endHold: endCommanderHold,
-    clear: clearCommanderHold,
-  } = useHoldTrigger(onOpenCommanderView)
 
   useEffect(() => () => clearTimers(), [clearTimers])
-  useEffect(() => () => clearCommanderHold(), [clearCommanderHold])
 
   const zoneProps = useZoneProps(startHold, endHold, clearTimers)
 
   const displayName = player.name.trim() || 'Unnamed'
-
-  const commanderHoldProps = {
-    onPointerDown: (event: React.PointerEvent) => {
-      event.preventDefault()
-      event.stopPropagation()
-      event.currentTarget.setPointerCapture(event.pointerId)
-      startCommanderHold()
-    },
-    onPointerUp: (event: React.PointerEvent) => {
-      event.preventDefault()
-      event.stopPropagation()
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId)
-      }
-      endCommanderHold()
-    },
-    onPointerCancel: (event: React.PointerEvent) => {
-      event.stopPropagation()
-      clearCommanderHold()
-    },
-  }
 
   if (commanderViewOpen) {
     return (
@@ -425,11 +398,13 @@ function PlayerLifePanel({
           <button
             type="button"
             className="life-counter-commander-btn"
-            {...commanderHoldProps}
+            onClick={(event) => {
+              event.stopPropagation()
+              onOpenCommanderView()
+            }}
           >
             Commander
           </button>
-          <span className="life-counter-commander-hint">Hold 1s</span>
         </div>
       </div>
 
