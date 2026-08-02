@@ -225,16 +225,37 @@ function useZoneProps(startHold: (delta: number) => void, endHold: () => void, c
   })
 }
 
-function CommanderDamageRow({
-  sourceName,
-  damage,
-  onAdjust,
-  zonesReversed,
+function CommanderDamageHubPanel({
+  orientation,
+  onReturn,
 }: {
-  sourceName: string
+  orientation: PanelOrientation
+  onReturn: () => void
+}) {
+  return (
+    <div className={`life-counter-player-panel life-counter-commander-hub life-counter-player-panel-${orientation}`}>
+      <div
+        className={`life-counter-panel-content life-counter-commander-hub-content life-counter-panel-content-${orientation}`}
+      >
+        <p className="life-counter-commander-hub-title">Commander damage you&apos;ve received</p>
+        <button type="button" className="life-counter-commander-return-btn" onClick={onReturn}>
+          Return to game
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function CommanderDamageSourcePanel({
+  sourcePlayer,
+  damage,
+  orientation,
+  onAdjust,
+}: {
+  sourcePlayer: CounterPlayer
   damage: number
+  orientation: PanelOrientation
   onAdjust: (delta: number) => void
-  zonesReversed: boolean
 }) {
   const applyChange = useCallback((delta: number) => onAdjust(delta), [onAdjust])
   const { startHold, endHold, clearTimers } = useHoldAdjust(applyChange)
@@ -242,17 +263,18 @@ function CommanderDamageRow({
   useEffect(() => () => clearTimers(), [clearTimers])
 
   const zoneProps = useZoneProps(startHold, endHold, clearTimers)
-  const label = sourceName.trim() || 'Unnamed'
+  const displayName = sourcePlayer.name.trim() || 'Unnamed'
+  const zonesReversed = orientation === 'right'
 
   const minusZone = (
     <button
       type="button"
-      className="life-counter-commander-zone life-counter-commander-zone-minus"
-      aria-label={`Decrease commander damage from ${label}`}
+      className="life-counter-zone life-counter-zone-minus"
+      aria-label={`Decrease commander damage from ${displayName}`}
       {...zoneProps(-1)}
     >
       <span
-        className={`life-counter-commander-zone-label${zonesReversed ? ' life-counter-zone-label-minus-rotated' : ''}`}
+        className={`life-counter-zone-label${zonesReversed ? ' life-counter-zone-label-minus-rotated' : ''}`}
         aria-hidden="true"
       >
         −
@@ -263,72 +285,28 @@ function CommanderDamageRow({
   const plusZone = (
     <button
       type="button"
-      className="life-counter-commander-zone life-counter-commander-zone-plus"
-      aria-label={`Increase commander damage from ${label}`}
+      className="life-counter-zone life-counter-zone-plus"
+      aria-label={`Increase commander damage from ${displayName}`}
       {...zoneProps(1)}
     >
-      <span className="life-counter-commander-zone-label" aria-hidden="true">
+      <span className="life-counter-zone-label" aria-hidden="true">
         +
       </span>
     </button>
   )
 
   return (
-    <li className="life-counter-commander-row">
-      <span className="life-counter-commander-row-name">{label}</span>
-      <div className="life-counter-commander-row-controls">
-        {zonesReversed ? (
-          <>
-            {plusZone}
-            <span className="life-counter-commander-row-damage">{damage}</span>
-            {minusZone}
-          </>
-        ) : (
-          <>
-            {minusZone}
-            <span className="life-counter-commander-row-damage">{damage}</span>
-            {plusZone}
-          </>
-        )}
-      </div>
-    </li>
-  )
-}
-
-function CommanderDamageView({
-  player,
-  players,
-  commanderDamage,
-  orientation,
-  onAdjustReceived,
-}: {
-  player: CounterPlayer
-  players: CounterPlayer[]
-  commanderDamage: Record<string, Record<string, number>>
-  orientation: PanelOrientation
-  onAdjustReceived: (fromId: string, delta: number) => void
-}) {
-  const displayName = player.name.trim() || 'Unnamed'
-  const sources = players.filter((other) => other.id !== player.id)
-  const zonesReversed = orientation === 'right'
-
-  return (
     <div
-      className={`life-counter-commander-view life-counter-commander-view-${orientation}`}
-      onClick={(event) => event.stopPropagation()}
+      className={`life-counter-player-panel life-counter-commander-source-panel life-counter-player-panel-${orientation}`}
     >
-      <p className="life-counter-commander-view-title">Commander — {displayName}</p>
-      <ul className="life-counter-commander-rows">
-        {sources.map((source) => (
-          <CommanderDamageRow
-            key={source.id}
-            sourceName={source.name}
-            damage={commanderDamage[source.id]?.[player.id] ?? 0}
-            zonesReversed={zonesReversed}
-            onAdjust={(delta) => onAdjustReceived(source.id, delta)}
-          />
-        ))}
-      </ul>
+      {zonesReversed ? plusZone : minusZone}
+
+      <div className={`life-counter-panel-content life-counter-panel-content-${orientation}`}>
+        <p className="life-counter-panel-name">{displayName}</p>
+        <p className="life-counter-panel-life">{damage}</p>
+      </div>
+
+      {zonesReversed ? minusZone : plusZone}
     </div>
   )
 }
@@ -337,25 +315,17 @@ function PlayerLifePanel({
   player,
   life,
   isActive,
-  commanderViewOpen,
-  players,
-  commanderDamage,
   onSelect,
   onAdjust,
   onOpenCommanderView,
-  onAdjustCommanderReceived,
   orientation,
 }: {
   player: CounterPlayer
   life: number
   isActive: boolean
-  commanderViewOpen: boolean
-  players: CounterPlayer[]
-  commanderDamage: Record<string, Record<string, number>>
   onSelect: () => void
   onAdjust: (delta: number) => void
   onOpenCommanderView: () => void
-  onAdjustCommanderReceived: (fromId: string, delta: number) => void
   orientation: PanelOrientation
 }) {
   const applyChange = useCallback((delta: number) => onAdjust(delta), [onAdjust])
@@ -367,20 +337,6 @@ function PlayerLifePanel({
 
   const displayName = player.name.trim() || 'Unnamed'
   const zonesReversed = orientation === 'right'
-
-  if (commanderViewOpen) {
-    return (
-      <div className="life-counter-player-panel life-counter-player-panel-commander-view">
-        <CommanderDamageView
-          player={player}
-          players={players}
-          commanderDamage={commanderDamage}
-          orientation={orientation}
-          onAdjustReceived={onAdjustCommanderReceived}
-        />
-      </div>
-    )
-  }
 
   const minusZone = (
     <button
@@ -490,40 +446,46 @@ function LifeCounterGame({
         {players.map((player, index) => {
           const seat = tableSeats[index]
           const isActive = player.id === activePlayerId
-          const commanderViewOpen = commanderViewPlayerId === player.id
+          const isCommanderHub = commanderViewPlayerId === player.id
+          const commanderMode = commanderViewPlayerId !== null
 
           return (
             <div
               key={player.id}
-              className={`life-counter-grid-cell life-counter-theme-${getPlayerTheme(index)}`}
+              className={`life-counter-grid-cell life-counter-theme-${getPlayerTheme(index)}${isCommanderHub ? ' life-counter-grid-cell-commander-hub' : ''}`}
               style={{ gridColumn: seat.col, gridRow: seat.row }}
               onClick={() => {
-                if (commanderViewPlayerId && commanderViewPlayerId !== player.id) {
-                  onCommanderViewPlayerChange(null)
-                }
+                if (commanderMode) return
                 onActivePlayerChange(player.id)
               }}
             >
-              <PlayerLifePanel
-                player={player}
-                life={lives[player.id] ?? 0}
-                isActive={isActive}
-                commanderViewOpen={commanderViewOpen}
-                players={players}
-                commanderDamage={commanderDamage}
-                orientation={seat.orientation}
-                onSelect={() => {
-                  if (commanderViewPlayerId && commanderViewPlayerId !== player.id) {
-                    onCommanderViewPlayerChange(null)
-                  }
-                  onActivePlayerChange(player.id)
-                }}
-                onAdjust={(delta) => onLifeChange(player.id, delta)}
-                onOpenCommanderView={() => onCommanderViewPlayerChange(player.id)}
-                onAdjustCommanderReceived={(fromId, delta) =>
-                  onCommanderDamageChange(fromId, player.id, delta)
-                }
-              />
+              {commanderMode ? (
+                isCommanderHub ? (
+                  <CommanderDamageHubPanel
+                    orientation={seat.orientation}
+                    onReturn={() => onCommanderViewPlayerChange(null)}
+                  />
+                ) : (
+                  <CommanderDamageSourcePanel
+                    sourcePlayer={player}
+                    damage={commanderDamage[player.id]?.[commanderViewPlayerId] ?? 0}
+                    orientation={seat.orientation}
+                    onAdjust={(delta) =>
+                      onCommanderDamageChange(player.id, commanderViewPlayerId, delta)
+                    }
+                  />
+                )
+              ) : (
+                <PlayerLifePanel
+                  player={player}
+                  life={lives[player.id] ?? 0}
+                  isActive={isActive}
+                  orientation={seat.orientation}
+                  onSelect={() => onActivePlayerChange(player.id)}
+                  onAdjust={(delta) => onLifeChange(player.id, delta)}
+                  onOpenCommanderView={() => onCommanderViewPlayerChange(player.id)}
+                />
+              )}
             </div>
           )
         })}
