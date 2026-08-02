@@ -225,7 +225,7 @@ function useZoneProps(startHold: (delta: number) => void, endHold: () => void, c
   })
 }
 
-function CommanderDamageColumn({
+function CommanderDamageRow({
   sourceName,
   damage,
   onAdjust,
@@ -274,19 +274,19 @@ function CommanderDamageColumn({
   )
 
   return (
-    <li className="life-counter-commander-column">
-      <span className="life-counter-commander-column-name">{label}</span>
-      <div className="life-counter-commander-column-control">
+    <li className="life-counter-commander-row">
+      <span className="life-counter-commander-row-name">{label}</span>
+      <div className="life-counter-commander-row-controls">
         {zonesReversed ? (
           <>
             {plusZone}
-            <span className="life-counter-commander-column-damage">{damage}</span>
+            <span className="life-counter-commander-row-damage">{damage}</span>
             {minusZone}
           </>
         ) : (
           <>
             {minusZone}
-            <span className="life-counter-commander-column-damage">{damage}</span>
+            <span className="life-counter-commander-row-damage">{damage}</span>
             {plusZone}
           </>
         )}
@@ -318,9 +318,9 @@ function CommanderDamageView({
       onClick={(event) => event.stopPropagation()}
     >
       <p className="life-counter-commander-view-title">Commander — {displayName}</p>
-      <ul className="life-counter-commander-columns">
+      <ul className="life-counter-commander-rows">
         {sources.map((source) => (
-          <CommanderDamageColumn
+          <CommanderDamageRow
             key={source.id}
             sourceName={source.name}
             damage={commanderDamage[source.id]?.[player.id] ?? 0}
