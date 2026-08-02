@@ -25,8 +25,8 @@ function createDefaultPlayers(): CounterPlayer[] {
   }))
 }
 
-function createInitialLives(players: CounterPlayer[], startingLife: number): Record<string, number> {
-  return Object.fromEntries(players.map((player) => [player.id, startingLife]))
+function createInitialLives(players: CounterPlayer[]): Record<string, number> {
+  return Object.fromEntries(players.map((player) => [player.id, DEFAULT_STARTING_LIFE]))
 }
 
 function createEmptyCommanderDamage(playerIds: string[]): Record<string, Record<string, number>> {
@@ -101,16 +101,12 @@ function HexagonButton({ onClick, label }: { onClick: () => void; label: string 
 
 function LifeCounterSettings({
   players,
-  startingLife,
   onPlayersChange,
-  onStartingLifeChange,
   onStartGame,
   onClose,
 }: {
   players: CounterPlayer[]
-  startingLife: number
   onPlayersChange: (players: CounterPlayer[]) => void
-  onStartingLifeChange: (life: number) => void
   onStartGame: () => void
   onClose: () => void
 }) {
@@ -131,7 +127,7 @@ function LifeCounterSettings({
     onPlayersChange(players.filter((player) => player.id !== id))
   }
 
-  const canStart = players.length >= MIN_PLAYERS && startingLife > 0
+  const canStart = players.length >= MIN_PLAYERS
 
   return (
     <div className="life-counter-settings">
@@ -141,17 +137,6 @@ function LifeCounterSettings({
           ×
         </button>
       </header>
-
-      <label className="life-counter-field">
-        <span>Starting life</span>
-        <input
-          type="number"
-          min={1}
-          max={999}
-          value={startingLife}
-          onChange={(e) => onStartingLifeChange(Math.max(1, Number(e.target.value) || 1))}
-        />
-      </label>
 
       <div className="life-counter-players-section">
         <div className="life-counter-players-header">
@@ -511,7 +496,7 @@ function createInitialCounterState() {
   const players = createDefaultPlayers()
   return {
     players,
-    lives: createInitialLives(players, DEFAULT_STARTING_LIFE),
+    lives: createInitialLives(players),
     commanderDamage: createEmptyCommanderDamage(players.map((player) => player.id)),
     activePlayerId: players[0]?.id ?? '',
   }
@@ -521,7 +506,6 @@ export function LifeCounter({ open, onClose }: LifeCounterProps) {
   const [initialCounterState] = useState(createInitialCounterState)
   const [view, setView] = useState<LifeCounterView>('settings')
   const [players, setPlayers] = useState<CounterPlayer[]>(initialCounterState.players)
-  const [startingLife, setStartingLife] = useState(DEFAULT_STARTING_LIFE)
   const [lives, setLives] = useState<Record<string, number>>(initialCounterState.lives)
   const [commanderDamage, setCommanderDamage] = useState<Record<string, Record<string, number>>>(
     initialCounterState.commanderDamage,
@@ -555,7 +539,7 @@ export function LifeCounter({ open, onClose }: LifeCounterProps) {
     setLives((prev) => {
       const next: Record<string, number> = {}
       for (const player of nextPlayers) {
-        next[player.id] = prev[player.id] ?? startingLife
+        next[player.id] = prev[player.id] ?? DEFAULT_STARTING_LIFE
       }
       return next
     })
@@ -570,7 +554,7 @@ export function LifeCounter({ open, onClose }: LifeCounterProps) {
 
   const handleStartGame = () => {
     const playerIds = players.map((player) => player.id)
-    setLives(createInitialLives(players, startingLife))
+    setLives(createInitialLives(players))
     setCommanderDamage(createEmptyCommanderDamage(playerIds))
     setActivePlayerId(players[0]?.id ?? '')
     setCommanderViewPlayerId(null)
@@ -605,9 +589,7 @@ export function LifeCounter({ open, onClose }: LifeCounterProps) {
       {view === 'settings' ? (
         <LifeCounterSettings
           players={players}
-          startingLife={startingLife}
           onPlayersChange={handlePlayersChange}
-          onStartingLifeChange={setStartingLife}
           onStartGame={handleStartGame}
           onClose={onClose}
         />
