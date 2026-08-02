@@ -274,7 +274,7 @@ function CommanderDamageSourcePanel({
       {...zoneProps(-1)}
     >
       <span
-        className={`life-counter-zone-label${zonesReversed ? ' life-counter-zone-label-minus-rotated' : ''}`}
+        className="life-counter-zone-label life-counter-zone-label-minus-rotated"
         aria-hidden="true"
       >
         −
@@ -346,7 +346,7 @@ function PlayerLifePanel({
       {...zoneProps(-1)}
     >
       <span
-        className={`life-counter-zone-label${zonesReversed ? ' life-counter-zone-label-minus-rotated' : ''}`}
+        className="life-counter-zone-label life-counter-zone-label-minus-rotated"
         aria-hidden="true"
       >
         −
