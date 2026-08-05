@@ -189,6 +189,9 @@ function LifeCounterSettings({
 
 function useZoneProps(startHold: (delta: number) => void, endHold: () => void, clearTimers: () => void) {
   return (delta: number) => ({
+    onClick: (event: React.MouseEvent) => {
+      event.stopPropagation()
+    },
     onPointerDown: (event: React.PointerEvent) => {
       event.preventDefault()
       event.stopPropagation()
