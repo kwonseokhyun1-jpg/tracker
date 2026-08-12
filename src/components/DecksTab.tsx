@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../context/DataContext'
 import { ConfirmDialog } from './ConfirmDialog'
-import { LifeCounter } from './LifeCounter'
 
 export function DecksTab() {
   const { data, addPlayer, updatePlayer, deletePlayer, addDeck, updateDeck, deleteDeck } =
@@ -18,7 +17,6 @@ export function DecksTab() {
     | { type: 'deck'; id: string; name: string }
     | null
   >(null)
-  const [lifeCounterOpen, setLifeCounterOpen] = useState(false)
 
   const sortedPlayers = useMemo(
     () => [...data.players].sort((a, b) => a.name.localeCompare(b.name)),
@@ -91,18 +89,9 @@ export function DecksTab() {
 
   return (
     <div className="tab-panel">
-      <header className="panel-header panel-header-with-actions">
-        <div>
-          <h2>Players & Decks</h2>
-          <p className="panel-desc">Add players and their deck names for game logging.</p>
-        </div>
-        <button
-          type="button"
-          className="btn btn-primary life-counter-play-btn"
-          onClick={() => setLifeCounterOpen(true)}
-        >
-          ▶ Play
-        </button>
+      <header className="panel-header">
+        <h2>Players & Decks</h2>
+        <p className="panel-desc">Add players and their deck names for game logging.</p>
       </header>
 
       <form className="add-form" onSubmit={handleAddPlayer}>
@@ -273,8 +262,6 @@ export function DecksTab() {
           })}
         </ul>
       )}
-
-      <LifeCounter open={lifeCounterOpen} onClose={() => setLifeCounterOpen(false)} />
 
       <ConfirmDialog
         open={confirm !== null}

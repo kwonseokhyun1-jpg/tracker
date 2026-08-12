@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext'
 import { getLastLoggedGame } from '../gameOrder'
 import { ConfirmDialog } from './ConfirmDialog'
 import { GameHistory } from './GameHistory'
+import { LifeCounter } from './LifeCounter'
 import type { Game } from '../types'
 import { OTHERS_PLAYER_NAME } from '../types'
 
@@ -129,6 +130,7 @@ export function LogTab() {
   const [error, setError] = useState<string | null>(null)
   const [deleteGameId, setDeleteGameId] = useState<string | null>(null)
   const [editingGameId, setEditingGameId] = useState<string | null>(null)
+  const [lifeCounterOpen, setLifeCounterOpen] = useState(false)
 
   const lastGame = useMemo(
     () => getLastLoggedGame(data.games, editingGameId),
@@ -264,11 +266,20 @@ export function LogTab() {
 
   return (
     <div className="tab-panel">
-      <header className="panel-header">
-        <h2>Log Game</h2>
-        <p className="panel-desc">
-          Select a deck for each seat and optionally who played it. Defaults to the deck owner.
-        </p>
+      <header className="panel-header panel-header-with-actions">
+        <div>
+          <h2>Log Game</h2>
+          <p className="panel-desc">
+            Select a deck for each seat and optionally who played it. Defaults to the deck owner.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-primary life-counter-play-btn"
+          onClick={() => setLifeCounterOpen(true)}
+        >
+          ▶ Play
+        </button>
       </header>
 
       {editingGameId && (
@@ -469,6 +480,8 @@ export function LogTab() {
         onEdit={startEditGame}
         onDelete={setDeleteGameId}
       />
+
+      <LifeCounter open={lifeCounterOpen} onClose={() => setLifeCounterOpen(false)} />
 
       <ConfirmDialog
         open={deleteGameId !== null}
