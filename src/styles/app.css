@@ -879,6 +879,13 @@ legend {
   white-space: nowrap;
 }
 
+.log-play-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .life-counter-overlay {
   position: fixed;
   inset: 0;
@@ -1327,5 +1334,298 @@ legend {
 
   .game-row {
     flex-direction: column;
+  }
+}
+
+/* Magic Uno */
+.magic-uno-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+}
+
+.magic-uno-settings,
+.magic-uno-game {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.magic-uno-settings-header,
+.magic-uno-game-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.magic-uno-settings-header h2,
+.magic-uno-game-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.magic-uno-blurb,
+.magic-uno-turn-line {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.magic-uno-players-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.magic-uno-players-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.magic-uno-player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.magic-uno-player-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.magic-uno-player-row input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+}
+
+.magic-uno-start-btn {
+  margin-top: auto;
+  width: 100%;
+}
+
+.magic-uno-opponents {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.magic-uno-opponent {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.625rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.magic-uno-opponent-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.magic-uno-opponent-name {
+  font-weight: 600;
+}
+
+.magic-uno-opponent-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.magic-uno-table {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.magic-uno-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.magic-uno-pile-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.magic-uno-card {
+  width: 92px;
+  min-height: 128px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  color: #0b1020;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+button.magic-uno-card {
+  cursor: pointer;
+  font: inherit;
+}
+
+.magic-uno-card-value {
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.magic-uno-card-color {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.magic-uno-card-back,
+.magic-uno-card-empty {
+  background: linear-gradient(160deg, #1e293b, #0f172a);
+  color: var(--text);
+}
+
+.magic-uno-card-white {
+  background: linear-gradient(160deg, #f8fafc, #d6d3d1);
+  color: #1c1917;
+}
+
+.magic-uno-card-blue {
+  background: linear-gradient(160deg, #60a5fa, #1d4ed8);
+  color: #eff6ff;
+}
+
+.magic-uno-card-black {
+  background: linear-gradient(160deg, #52525b, #18181b);
+  color: #f4f4f5;
+}
+
+.magic-uno-card-red {
+  background: linear-gradient(160deg, #f87171, #b91c1c);
+  color: #fff1f2;
+}
+
+.magic-uno-card-green {
+  background: linear-gradient(160deg, #4ade80, #15803d);
+  color: #052e16;
+}
+
+.magic-uno-card-wild {
+  background: linear-gradient(135deg, #f8fafc 0%, #3b82f6 25%, #18181b 50%, #ef4444 75%, #22c55e 100%);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.magic-uno-card-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  transform: translateY(-4px);
+}
+
+.magic-uno-card-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.magic-uno-active-color {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.magic-uno-active-color-white { color: #e7e5e4; }
+.magic-uno-active-color-blue { color: #93c5fd; }
+.magic-uno-active-color-black { color: #a1a1aa; }
+.magic-uno-active-color-red { color: #fca5a5; }
+.magic-uno-active-color-green { color: #86efac; }
+
+.magic-uno-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  text-align: center;
+}
+
+.magic-uno-banner p {
+  margin: 0;
+}
+
+.magic-uno-banner-uno {
+  border-color: #f59e0b;
+}
+
+.magic-uno-color-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.magic-uno-color-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.magic-uno-hand-section h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.magic-uno-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+@media (max-width: 600px) {
+  .magic-uno-card {
+    width: 76px;
+    min-height: 108px;
+  }
+
+  .log-play-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

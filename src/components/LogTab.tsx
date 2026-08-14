@@ -4,6 +4,7 @@ import { getLastLoggedGame } from '../gameOrder'
 import { ConfirmDialog } from './ConfirmDialog'
 import { GameHistory } from './GameHistory'
 import { LifeCounter } from './LifeCounter'
+import { MagicUno } from './MagicUno'
 import type { Game } from '../types'
 import { OTHERS_PLAYER_NAME } from '../types'
 
@@ -131,6 +132,7 @@ export function LogTab() {
   const [deleteGameId, setDeleteGameId] = useState<string | null>(null)
   const [editingGameId, setEditingGameId] = useState<string | null>(null)
   const [lifeCounterOpen, setLifeCounterOpen] = useState(false)
+  const [magicUnoOpen, setMagicUnoOpen] = useState(false)
 
   const lastGame = useMemo(
     () => getLastLoggedGame(data.games, editingGameId),
@@ -273,13 +275,22 @@ export function LogTab() {
             Select a deck for each seat and optionally who played it. Defaults to the deck owner.
           </p>
         </div>
-        <button
-          type="button"
-          className="btn btn-primary life-counter-play-btn"
-          onClick={() => setLifeCounterOpen(true)}
-        >
-          ▶ Play
-        </button>
+        <div className="log-play-actions">
+          <button
+            type="button"
+            className="btn btn-primary life-counter-play-btn"
+            onClick={() => setLifeCounterOpen(true)}
+          >
+            ▶ Life
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary life-counter-play-btn"
+            onClick={() => setMagicUnoOpen(true)}
+          >
+            Uno
+          </button>
+        </div>
       </header>
 
       {editingGameId && (
@@ -482,6 +493,7 @@ export function LogTab() {
       />
 
       <LifeCounter open={lifeCounterOpen} onClose={() => setLifeCounterOpen(false)} />
+      <MagicUno open={magicUnoOpen} onClose={() => setMagicUnoOpen(false)} />
 
       <ConfirmDialog
         open={deleteGameId !== null}
