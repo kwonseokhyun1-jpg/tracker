@@ -4,6 +4,7 @@ import type { AppData, DeckStat, Game, PlayerStat } from './types'
 export interface ComputeStatsOptions {
   exclude1v1?: boolean
   excludeTeamGames?: boolean
+  excludeNon4Player?: boolean
 }
 
 export function is1v1Game(game: Game): boolean {
@@ -14,6 +15,10 @@ export function isTeamGame(game: Game): boolean {
   return game.winnerDeckIds.length > 1
 }
 
+export function is4PlayerGame(game: Game): boolean {
+  return game.deckIds.length === 4
+}
+
 function gamesForStats(games: Game[], options?: ComputeStatsOptions): Game[] {
   let result = games
   if (options?.exclude1v1) {
@@ -21,6 +26,9 @@ function gamesForStats(games: Game[], options?: ComputeStatsOptions): Game[] {
   }
   if (options?.excludeTeamGames) {
     result = result.filter((g) => !isTeamGame(g))
+  }
+  if (options?.excludeNon4Player) {
+    result = result.filter((g) => is4PlayerGame(g))
   }
   return result
 }

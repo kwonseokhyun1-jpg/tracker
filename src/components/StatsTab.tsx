@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useData } from '../context/DataContext'
-import { computeDeckStats, computePlayerStats, is1v1Game, isTeamGame } from '../stats'
+import {
+  computeDeckStats,
+  computePlayerStats,
+  is1v1Game,
+  is4PlayerGame,
+  isTeamGame,
+} from '../stats'
 import type {
   DeckSortField,
   DeckStat,
@@ -88,6 +94,7 @@ export function StatsTab() {
   const [excludeOthers, setExcludeOthers] = useState(true)
   const [exclude1v1, setExclude1v1] = useState(false)
   const [excludeTeamGames, setExcludeTeamGames] = useState(false)
+  const [excludeNon4Player, setExcludeNon4Player] = useState(false)
   const [excludeMenuOpen, setExcludeMenuOpen] = useState(false)
   const excludeMenuRef = useRef<HTMLDivElement>(null)
   const [minGames, setMinGames] = useState<StatsMinGamesFilter>(5)
@@ -128,12 +135,13 @@ export function StatsTab() {
   }
 
   const statsOptions = useMemo(() => {
-    if (!exclude1v1 && !excludeTeamGames) return undefined
+    if (!exclude1v1 && !excludeTeamGames && !excludeNon4Player) return undefined
     return {
       ...(exclude1v1 ? { exclude1v1: true as const } : {}),
       ...(excludeTeamGames ? { excludeTeamGames: true as const } : {}),
+      ...(excludeNon4Player ? { excludeNon4Player: true as const } : {}),
     }
-  }, [exclude1v1, excludeTeamGames])
+  }, [exclude1v1, excludeTeamGames, excludeNon4Player])
 
   const deckStats = useMemo(
     () => computeDeckStats(data, statsOptions),
@@ -188,7 +196,8 @@ export function StatsTab() {
   }, [playerStats, search, excludeOthers, minGames, playerSortField, sortDirection])
 
   const isEmpty = viewMode === 'deck' ? deckStats.length === 0 : playerStats.length === 0
-  const hasActiveExcludeOptions = !excludeOthers || exclude1v1 || excludeTeamGames
+  const hasActiveExcludeOptions =
+    !excludeOthers || exclude1v1 || excludeTeamGames || excludeNon4Player
   const hasActiveFilters =
     search.trim() !== '' ||
     hasActiveExcludeOptions ||
@@ -202,9 +211,10 @@ export function StatsTab() {
       if (!game.deckIds.includes(selectedDeck.deckId)) return false
       if (exclude1v1 && is1v1Game(game)) return false
       if (excludeTeamGames && isTeamGame(game)) return false
+      if (excludeNon4Player && !is4PlayerGame(game)) return false
       return true
     })
-  }, [data.games, selectedDeck, exclude1v1, excludeTeamGames])
+  }, [data.games, selectedDeck, exclude1v1, excludeTeamGames, excludeNon4Player])
 
   return (
     <div className="tab-panel">
@@ -306,6 +316,15 @@ export function StatsTab() {
                     />
                     <span>Exclude team games</span>
                   </label>
+
+                  <label className="stats-exclude-menu-item checkbox-label" role="menuitemcheckbox">
+                    <input
+                      type="checkbox"
+                      checked={excludeNon4Player}
+                      onChange={(e) => setExcludeNon4Player(e.target.checked)}
+                    />
+                    <span>Exclude non 4 player</span>
+                  </label>
                 </div>
               )}
             </div>
@@ -320,6 +339,7 @@ export function StatsTab() {
                   setExcludeMenuOpen(false)
                   setExclude1v1(false)
                   setExcludeTeamGames(false)
+                  setExcludeNon4Player(false)
                   setMinGames(5)
                 }}
               >
