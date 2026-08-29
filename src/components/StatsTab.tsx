@@ -97,7 +97,7 @@ export function StatsTab() {
   const [excludeNon4Player, setExcludeNon4Player] = useState(false)
   const [excludeMenuOpen, setExcludeMenuOpen] = useState(false)
   const excludeMenuRef = useRef<HTMLDivElement>(null)
-  const [minGames, setMinGames] = useState<StatsMinGamesFilter>(5)
+  const [minGames, setMinGames] = useState<StatsMinGamesFilter>(10)
   const [deckSortField, setDeckSortField] = useState<DeckSortField>('winRate')
   const [playerSortField, setPlayerSortField] = useState<PlayerSortField>('winRate')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
@@ -340,7 +340,7 @@ export function StatsTab() {
                   setExclude1v1(false)
                   setExcludeTeamGames(false)
                   setExcludeNon4Player(false)
-                  setMinGames(5)
+                  setMinGames(10)
                 }}
               >
                 Clear filters
