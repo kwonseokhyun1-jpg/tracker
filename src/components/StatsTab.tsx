@@ -320,7 +320,7 @@ export function StatsTab() {
                   setExcludeMenuOpen(false)
                   setExclude1v1(false)
                   setExcludeTeamGames(false)
-                  setMinGames(5)
+                  setMinGames(10)
                 }}
               >
                 Clear filters
