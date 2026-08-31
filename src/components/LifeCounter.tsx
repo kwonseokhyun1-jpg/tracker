@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useHoldAdjust } from '../useHoldAdjust'
+import { useWakeLock } from '../useWakeLock'
 
 const DEFAULT_PLAYER_COUNT = 4
 const DEFAULT_STARTING_LIFE = 40
@@ -515,6 +516,8 @@ export function LifeCounter({ open, onClose }: LifeCounterProps) {
   )
   const [activePlayerId, setActivePlayerId] = useState(initialCounterState.activePlayerId)
   const [commanderViewPlayerId, setCommanderViewPlayerId] = useState<string | null>(null)
+
+  useWakeLock(open)
 
   useEffect(() => {
     if (!open) return
