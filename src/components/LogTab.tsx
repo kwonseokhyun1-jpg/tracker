@@ -138,8 +138,15 @@ export function LogTab() {
   )
 
   const decksByPlayer = useMemo(() => {
+    const isOthers = (name: string) =>
+      name.trim().toLowerCase() === OTHERS_PLAYER_NAME.toLowerCase()
     return [...data.players]
-      .sort((a, b) => a.name.localeCompare(b.name))
+      .sort((a, b) => {
+        const aOthers = isOthers(a.name)
+        const bOthers = isOthers(b.name)
+        if (aOthers !== bOthers) return aOthers ? 1 : -1
+        return a.name.localeCompare(b.name)
+      })
       .map((player) => ({
         player,
         decks: data.decks
