@@ -1,10 +1,11 @@
 import { normalizeGamePilots } from './gamePilots'
-import type { AppData, Deck, Game, Player } from './types'
+import type { AppData, Deck, Game, Player, WatchlistCard } from './types'
 
 const EMPTY_DATA: AppData = {
   players: [],
   decks: [],
   games: [],
+  watchlist: [],
 }
 
 type ParseResult = { ok: true; data: AppData } | { ok: false; reason: string }
@@ -68,6 +69,42 @@ function parseGames(raw: unknown): Game[] | null {
   return games
 }
 
+function parseWatchlist(raw: unknown): WatchlistCard[] | null {
+  if (raw === undefined) return []
+  if (!Array.isArray(raw)) return null
+  const cards: WatchlistCard[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') return null
+    const card = item as WatchlistCard
+    if (
+      !isNonEmptyString(card.scryfallId) ||
+      !isNonEmptyString(card.name) ||
+      !isNonEmptyString(card.setCode) ||
+      !isNonEmptyString(card.setName) ||
+      !isNonEmptyString(card.collectorNumber) ||
+      !isNonEmptyString(card.addedAt)
+    ) {
+      return null
+    }
+    const entry: WatchlistCard = {
+      scryfallId: card.scryfallId,
+      name: card.name.trim(),
+      setCode: card.setCode.trim(),
+      setName: card.setName.trim(),
+      collectorNumber: card.collectorNumber.trim(),
+      addedAt: card.addedAt,
+    }
+    if (typeof card.imageUri === 'string' && card.imageUri.trim()) {
+      entry.imageUri = card.imageUri.trim()
+    }
+    if (typeof card.tcgplayerId === 'number' && Number.isFinite(card.tcgplayerId)) {
+      entry.tcgplayerId = card.tcgplayerId
+    }
+    cards.push(entry)
+  }
+  return cards
+}
+
 export function parseAppData(raw: unknown): ParseResult {
   if (!raw || typeof raw !== 'object') {
     return { ok: false, reason: 'Invalid backup file format.' }
@@ -83,11 +120,14 @@ export function parseAppData(raw: unknown): ParseResult {
   const games = parseGames(parsed.games)
   if (!games) return { ok: false, reason: 'Backup has invalid games data.' }
 
+  const watchlist = parseWatchlist(parsed.watchlist)
+  if (!watchlist) return { ok: false, reason: 'Backup has invalid watchlist data.' }
+
   const normalizedGames = games.map((game) => normalizeGamePilots(game, decks))
 
   return {
     ok: true,
-    data: { players, decks, games: normalizedGames },
+    data: { players, decks, games: normalizedGames, watchlist },
   }
 }
 

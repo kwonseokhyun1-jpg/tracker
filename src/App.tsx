@@ -1,5 +1,6 @@
 import { DataProvider } from './context/DataContext'
 import { TabBar } from './components/TabBar'
+import { WatchlistTab } from './components/WatchlistTab'
 import { DecksTab } from './components/DecksTab'
 import { LogTab } from './components/LogTab'
 import { StatsTab } from './components/StatsTab'
@@ -24,6 +25,7 @@ function AppContent() {
       </header>
 
       <main className="app-main">
+        {activeTab === 'watchlist' && <WatchlistTab />}
         {activeTab === 'decks' && <DecksTab />}
         {activeTab === 'log' && <LogTab />}
         {activeTab === 'stats' && <StatsTab />}

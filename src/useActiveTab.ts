@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react'
 import type { TabId } from './types'
 
-export const DEFAULT_TAB: TabId = 'decks'
+export const DEFAULT_TAB: TabId = 'watchlist'
 
-const TAB_IDS = new Set<TabId>(['decks', 'log', 'stats'])
+const TAB_IDS = new Set<TabId>(['watchlist', 'decks', 'log', 'stats'])
 
 const LEGACY_TAB_STORAGE_KEYS = ['mtg-tracker-tab', 'mtg-tracker-active-tab'] as const
 

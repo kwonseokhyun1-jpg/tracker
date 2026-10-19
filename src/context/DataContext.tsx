@@ -12,7 +12,7 @@ import { gameDeckLabel } from '../gamePilots'
 import { resolveParticipantDeckIds, validateGameLog, type LogParticipant } from '../logParticipants'
 import { computeDeckStats, computePlayerStats } from '../stats'
 import { loadData, saveData } from '../storage'
-import type { AppData, Deck, DeckStat, Game, Player, PlayerStat } from '../types'
+import type { AppData, Deck, DeckStat, Game, Player, PlayerStat, WatchlistCard } from '../types'
 import { deckHasGameHistory, playerHasGameHistory } from '../stats'
 
 interface DataContextValue {
@@ -37,6 +37,8 @@ interface DataContextValue {
     winnerIndices: number[],
   ) => { ok: true } | { ok: false; reason: string }
   deleteGame: (id: string) => void
+  addWatchlistCard: (card: Omit<WatchlistCard, 'addedAt'>) => { ok: true } | { ok: false; reason: string }
+  removeWatchlistCard: (scryfallId: string) => void
   getDeckLabel: (deckId: string) => string
   getGameDeckLabel: (deckId: string, playedByPlayerId?: string) => string
   importData: (data: AppData) => void
@@ -196,6 +198,40 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }))
   }, [])
 
+  const addWatchlistCard = useCallback((card: Omit<WatchlistCard, 'addedAt'>) => {
+    const scryfallId = card.scryfallId.trim()
+    if (!scryfallId || !card.name.trim()) {
+      return { ok: false as const, reason: 'Card is missing required fields.' }
+    }
+
+    const alreadyWatched = (data.watchlist ?? []).some((c) => c.scryfallId === scryfallId)
+    if (alreadyWatched) {
+      return { ok: false as const, reason: 'That printing is already on your watchlist.' }
+    }
+
+    const entry: WatchlistCard = {
+      ...card,
+      scryfallId,
+      name: card.name.trim(),
+      setCode: card.setCode.trim(),
+      setName: card.setName.trim(),
+      collectorNumber: card.collectorNumber.trim(),
+      addedAt: new Date().toISOString(),
+    }
+    setData((prev) => {
+      if ((prev.watchlist ?? []).some((c) => c.scryfallId === scryfallId)) return prev
+      return { ...prev, watchlist: [...(prev.watchlist ?? []), entry] }
+    })
+    return { ok: true as const }
+  }, [data.watchlist])
+
+  const removeWatchlistCard = useCallback((scryfallId: string) => {
+    setData((prev) => ({
+      ...prev,
+      watchlist: (prev.watchlist ?? []).filter((c) => c.scryfallId !== scryfallId),
+    }))
+  }, [])
+
   const importData = useCallback((next: AppData) => {
     setData(next)
     saveData(next)
@@ -214,6 +250,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addGameFromLog,
     updateGameFromLog,
     deleteGame,
+    addWatchlistCard,
+    removeWatchlistCard,
     getDeckLabel,
     getGameDeckLabel,
     importData,

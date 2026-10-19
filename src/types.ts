@@ -18,10 +18,23 @@ export interface Game {
   winnerDeckIds: string[]
 }
 
+/** A card printing tracked for TCGPlayer market price. */
+export interface WatchlistCard {
+  scryfallId: string
+  name: string
+  setCode: string
+  setName: string
+  collectorNumber: string
+  imageUri?: string
+  tcgplayerId?: number
+  addedAt: string
+}
+
 export interface AppData {
   players: Player[]
   decks: Deck[]
   games: Game[]
+  watchlist: WatchlistCard[]
 }
 
 export interface DeckStat {
@@ -45,7 +58,7 @@ export interface PlayerStat {
 /** Default owner when logging a new deck without specifying a player name. */
 export const OTHERS_PLAYER_NAME = 'Others'
 
-export type TabId = 'decks' | 'log' | 'stats'
+export type TabId = 'watchlist' | 'decks' | 'log' | 'stats'
 
 export type StatsViewMode = 'deck' | 'player'
 
