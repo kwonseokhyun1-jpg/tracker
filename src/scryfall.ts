@@ -119,9 +119,12 @@ export async function searchCardPrintings(name: string): Promise<ScryfallCard[]>
   }
 }
 
+const SCRYFALL_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /** Refresh TCGPlayer market prices for known Scryfall ids (batches of 75). */
 export async function fetchCardsByIds(ids: string[]): Promise<Map<string, ScryfallCard>> {
-  const unique = [...new Set(ids.filter(Boolean))]
+  const unique = [...new Set(ids.filter((id) => SCRYFALL_UUID.test(id)))]
   const byId = new Map<string, ScryfallCard>()
   for (let i = 0; i < unique.length; i += 75) {
     const chunk = unique.slice(i, i + 75)
