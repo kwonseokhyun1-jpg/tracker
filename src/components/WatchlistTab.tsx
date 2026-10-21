@@ -10,6 +10,7 @@ import {
   type ScryfallCard,
 } from '../scryfall'
 import type { WatchlistCard } from '../types'
+import { WatchlistCardDialog } from './WatchlistCardDialog'
 
 function toWatchlistCard(card: ScryfallCard): Omit<WatchlistCard, 'addedAt'> {
   return {
@@ -42,6 +43,7 @@ export function WatchlistTab() {
   const [pricesLoading, setPricesLoading] = useState(false)
   const [pricesError, setPricesError] = useState<string | null>(null)
   const [pricesUpdatedAt, setPricesUpdatedAt] = useState<string | null>(null)
+  const [selectedCard, setSelectedCard] = useState<WatchlistCard | null>(null)
 
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const searchGen = useRef(0)
@@ -329,33 +331,53 @@ export function WatchlistTab() {
               const image = live ? cardImageUri(live) : card.imageUri
               return (
                 <li key={card.scryfallId} className="watchlist-card-row">
-                  {image ? (
-                    <img src={image} alt="" className="watchlist-thumb" loading="lazy" />
-                  ) : (
-                    <div className="watchlist-thumb watchlist-thumb-empty" aria-hidden />
-                  )}
-                  <div className="watchlist-printing-meta">
-                    <div className="watchlist-printing-name">{card.name}</div>
-                    <div className="muted">
-                      {card.setName} ({card.setCode.toUpperCase()}) #{card.collectorNumber}
-                    </div>
-                    <div className="watchlist-price-line">
-                      <span>
-                        Market{' '}
-                        <strong>
-                          {live ? formatUsd(live.prices.usd) : pricesLoading ? '…' : '—'}
-                        </strong>
-                      </span>
-                      {live?.prices.usd_foil && (
+                  <div
+                    className="watchlist-card-open"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedCard(card)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setSelectedCard(card)
+                      }
+                    }}
+                    aria-label={`Open price history for ${card.name}`}
+                  >
+                    {image ? (
+                      <img src={image} alt="" className="watchlist-thumb" loading="lazy" />
+                    ) : (
+                      <div className="watchlist-thumb watchlist-thumb-empty" aria-hidden />
+                    )}
+                    <div className="watchlist-printing-meta">
+                      <div className="watchlist-printing-name">{card.name}</div>
+                      <div className="muted">
+                        {card.setName} ({card.setCode.toUpperCase()}) #{card.collectorNumber}
+                      </div>
+                      <div className="watchlist-price-line">
                         <span>
-                          Foil <strong>{formatUsd(live.prices.usd_foil)}</strong>
+                          Market{' '}
+                          <strong>
+                            {live ? formatUsd(live.prices.usd) : pricesLoading ? '…' : '—'}
+                          </strong>
                         </span>
-                      )}
-                      {buyUrl && (
-                        <a href={buyUrl} target="_blank" rel="noopener noreferrer">
-                          TCGPlayer
-                        </a>
-                      )}
+                        {live?.prices.usd_foil && (
+                          <span>
+                            Foil <strong>{formatUsd(live.prices.usd_foil)}</strong>
+                          </span>
+                        )}
+                        {buyUrl && (
+                          <a
+                            href={buyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            TCGPlayer
+                          </a>
+                        )}
+                      </div>
+                      <div className="muted watchlist-chart-hint">Click for price graph</div>
                     </div>
                   </div>
                   <button
@@ -371,6 +393,31 @@ export function WatchlistTab() {
           </ul>
         )}
       </section>
+
+      {selectedCard && (
+        <WatchlistCardDialog
+          card={selectedCard}
+          marketPrice={livePrices.get(selectedCard.scryfallId)?.prices.usd ?? null}
+          foilPrice={livePrices.get(selectedCard.scryfallId)?.prices.usd_foil ?? null}
+          imageUri={
+            (() => {
+              const live = livePrices.get(selectedCard.scryfallId)
+              return (live ? cardImageUri(live) : undefined) ?? selectedCard.imageUri
+            })()
+          }
+          tcgplayerUrl={
+            (() => {
+              const live = livePrices.get(selectedCard.scryfallId)
+              if (live) return tcgplayerUrl(live)
+              if (selectedCard.tcgplayerId) {
+                return `https://www.tcgplayer.com/product/${selectedCard.tcgplayerId}`
+              }
+              return undefined
+            })()
+          }
+          onClose={() => setSelectedCard(null)}
+        />
+      )}
     </div>
   )
 }
