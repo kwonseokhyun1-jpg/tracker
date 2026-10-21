@@ -67,7 +67,7 @@ export function BackupButton() {
       <ConfirmDialog
         open={pendingImport !== null}
         title="Import backup?"
-        message="This replaces all current players, decks, and games with the backup file."
+        message="This replaces all current players, decks, games, and watchlist cards with the backup file."
         confirmLabel="Import"
         onConfirm={confirmImport}
         onCancel={() => setPendingImport(null)}
